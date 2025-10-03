@@ -3,20 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel CRM Marketing - Tijuca</title>
+  <title>Painel Marketing - Tijuca</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root {
       --tijuca-yellow: #f5a800;
       --tijuca-blue: #003a70;
       --tijuca-green: #00662f;
+      --tijuca-red: #cc0000;
     }
   </style>
 
-  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDKNqGVrjbj8l7S7OIvN-w3CKmsj8twC98",
@@ -28,56 +29,86 @@
       measurementId: "G-LX1Z71R97G"
     };
 
-    let auth;
+    let db, auth;
+
     async function initializeFirebase() {
       const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
       auth = getAuth(app);
-
       await signInAnonymously(auth);
       onAuthStateChanged(auth, (user) => {
         if (user) {
-          document.getElementById("user-id-display").textContent =
-            "Conectado como usuário anônimo (UID: " + user.uid + ")";
+          loadResumo("doacoes_v2", "doacoes-resumo");
+          loadResumo("patrocinios_v2", "patrocinios-resumo");
+          loadResumo("midia_v2", "midia-resumo");
+          loadResumo("midia_ooh_v2", "midia-ooh-resumo");
         }
+      });
+    }
+
+    function loadResumo(collectionName, elementId) {
+      const q = query(collection(db, collectionName), orderBy("timestamp", "desc"), limit(3));
+      onSnapshot(q, (snapshot) => {
+        const container = document.getElementById(elementId);
+        container.innerHTML = "";
+
+        if (snapshot.empty) {
+          container.innerHTML = "<p class='text-gray-500 text-sm'>Sem registros ainda.</p>";
+          return;
+        }
+
+        snapshot.docs.forEach(doc => {
+          const data = doc.data();
+          const item = document.createElement("div");
+          item.className = "border-b py-2 text-sm";
+          item.innerHTML = `
+            <p><span class="font-semibold">${data.responsavel || "N/A"}</span> - ${data.data || ""}</p>
+            <p class="text-gray-600 truncate">${data.projeto || data.entidade || data.campanha || data.fornecedor || "—"}</p>
+          `;
+          container.appendChild(item);
+        });
       });
     }
 
     window.onload = initializeFirebase;
   </script>
 </head>
-<body class="bg-gray-100 p-8">
-  <div class="max-w-6xl mx-auto">
-    <header class="text-center mb-10 bg-white rounded-xl shadow-lg p-6 border-b-4" style="border-color: var(--tijuca-green);">
-      <img src="https://i.postimg.cc/bvySmsHG/Prancheta-1-4x.png" alt="Tijuca Alimentos" class="mx-auto h-20 mb-4">
-      <h1 class="text-3xl font-extrabold" style="color: var(--tijuca-blue);">Painel CRM Marketing</h1>
-      <p id="user-id-display" class="text-xs text-gray-500 mt-2">Carregando...</p>
+<body class="p-6 bg-gray-100">
+  <div class="w-full px-6">
+    <header class="text-center mb-8 bg-white rounded-xl shadow p-6 border-b-4" style="border-color: var(--tijuca-green);">
+      <img src="https://i.postimg.cc/bvySmsHG/Prancheta-1-4x.png" class="mx-auto h-16 mb-4">
+      <h1 class="text-2xl font-bold" style="color: var(--tijuca-blue);">Painel de Marketing - Tijuca</h1>
     </header>
 
-    <section class="grid md:grid-cols-2 gap-6">
+    <div class="grid md:grid-cols-2 gap-6">
       <!-- Doações -->
-      <a href="doacoes.html" class="block p-6 rounded-xl shadow hover:shadow-lg transition transform hover:scale-[1.02]" style="background: var(--tijuca-green); color: white;">
-        <h2 class="text-xl font-bold">📦 Doações</h2>
-        <p class="mt-2">Gerencie entradas de doações em tempo real.</p>
-      </a>
-
-      <!-- Mídia -->
-      <a href="midia.html" class="block p-6 rounded-xl shadow hover:shadow-lg transition transform hover:scale-[1.02]" style="background: var(--tijuca-blue); color: white;">
-        <h2 class="text-xl font-bold">🖼️ Mídia</h2>
-        <p class="mt-2">Controle de mídia digital e campanhas.</p>
-      </a>
-
-      <!-- Mídia OOH -->
-      <a href="midia_ooh.html" class="block p-6 rounded-xl shadow hover:shadow-lg transition transform hover:scale-[1.02]" style="background: var(--tijuca-yellow); color: black;">
-        <h2 class="text-xl font-bold">🏙️ Mídia OOH</h2>
-        <p class="mt-2">Gerenciamento de outdoors, painéis e mídia externa.</p>
-      </a>
+      <div class="bg-white rounded-xl shadow p-4">
+        <h2 class="text-lg font-semibold mb-2" style="color: var(--tijuca-green);">Últimas Doações</h2>
+        <div id="doacoes-resumo" class="mb-2"></div>
+        <a href="doacoes.html" class="text-blue-600 hover:underline text-sm">Ver todas →</a>
+      </div>
 
       <!-- Patrocínios -->
-      <a href="patrocinios.html" class="block p-6 rounded-xl shadow hover:shadow-lg transition transform hover:scale-[1.02]" style="background: var(--tijuca-green); color: white;">
-        <h2 class="text-xl font-bold">🤝 Patrocínios</h2>
-        <p class="mt-2">Acompanhe propostas e solicitações de patrocínios.</p>
-      </a>
-    </section>
+      <div class="bg-white rounded-xl shadow p-4">
+        <h2 class="text-lg font-semibold mb-2" style="color: var(--tijuca-green);">Últimos Patrocínios</h2>
+        <div id="patrocinios-resumo" class="mb-2"></div>
+        <a href="patrocinios.html" class="text-blue-600 hover:underline text-sm">Ver todos →</a>
+      </div>
+
+      <!-- Mídias -->
+      <div class="bg-white rounded-xl shadow p-4">
+        <h2 class="text-lg font-semibold mb-2" style="color: var(--tijuca-green);">Últimas Mídias</h2>
+        <div id="midia-resumo" class="mb-2"></div>
+        <a href="midia.html" class="text-blue-600 hover:underline text-sm">Ver todas →</a>
+      </div>
+
+      <!-- Mídia OOH -->
+      <div class="bg-white rounded-xl shadow p-4">
+        <h2 class="text-lg font-semibold mb-2" style="color: var(--tijuca-green);">Últimas Mídia OOH</h2>
+        <div id="midia-ooh-resumo" class="mb-2"></div>
+        <a href="midia_ooh.html" class="text-blue-600 hover:underline text-sm">Ver todas →</a>
+      </div>
+    </div>
   </div>
 </body>
 </html>
