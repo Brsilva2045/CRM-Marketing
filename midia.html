@@ -28,7 +28,7 @@
       measurementId: "G-LX1Z71R97G"
     };
 
-    let db, auth;
+    let db, auth, editingId = null;
 
     function getCollectionPath() {
       return `midia_v2`;
@@ -38,13 +38,9 @@
       const app = initializeApp(firebaseConfig);
       db = getFirestore(app);
       auth = getAuth(app);
-
       await signInAnonymously(auth);
       onAuthStateChanged(auth, (user) => {
-        if (user) {
-          document.getElementById("user-id-display").textContent = `Conectado`;
-          startDataListener();
-        }
+        if (user) startDataListener();
       });
     }
 
@@ -59,29 +55,39 @@
     function renderRecords(records) {
       const tbody = document.getElementById("records-table-body");
       tbody.innerHTML = "";
-
-      if (records.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="py-6 text-center text-gray-500">Nenhuma mídia cadastrada.</td></tr>`;
-        return;
-      }
-
       records.forEach(record => {
         const row = document.createElement("tr");
         row.className = "border-b hover:bg-gray-50";
         row.innerHTML = `
-          <td class="px-4 py-2">${record.data || "N/A"}</td>
-          <td class="px-4 py-2">${record.responsavel || "N/A"}</td>
-          <td class="px-4 py-2">${record.veiculo || "N/A"}</td>
-          <td class="px-4 py-2">${record.formato || "N/A"}</td>
-          <td class="px-4 py-2">${record.campanha || "N/A"}</td>
-          <td class="px-4 py-2 text-right font-semibold text-yellow-700">R$ ${(record.custo || 0).toFixed(2)}</td>
-          <td class="px-4 py-2">${record.inicio || "N/A"}</td>
-          <td class="px-4 py-2">${record.fim || "N/A"}</td>
-          <td class="px-4 py-2">${record.observacoes || "N/A"}</td>
-          <td class="px-4 py-2"><button onclick="deleteRecord('${record.id}')" class="text-red-600 hover:underline">Excluir</button></td>
+          <td class="px-4 py-2">${record.data || ""}</td>
+          <td class="px-4 py-2">${record.responsavel || ""}</td>
+          <td class="px-4 py-2">${record.veiculo || ""}</td>
+          <td class="px-4 py-2">${record.formato || ""}</td>
+          <td class="px-4 py-2">${record.campanha || ""}</td>
+          <td class="px-4 py-2">R$ ${(record.custo || 0).toFixed(2)}</td>
+          <td class="px-4 py-2">${record.inicio || ""}</td>
+          <td class="px-4 py-2">${record.fim || ""}</td>
+          <td class="px-4 py-2">${record.observacoes || ""}</td>
+          <td class="px-4 py-2">
+            <button onclick='editRecord(${JSON.stringify(record)})' class="text-blue-600 hover:underline mr-2">Editar</button>
+            <button onclick="deleteRecord('${record.id}')" class="text-red-600 hover:underline">Excluir</button>
+          </td>
         `;
         tbody.appendChild(row);
       });
+    }
+
+    function editRecord(record) {
+      document.getElementById("data").value = record.data || "";
+      document.getElementById("responsavel").value = record.responsavel || "";
+      document.getElementById("veiculo").value = record.veiculo || "";
+      document.getElementById("formato").value = record.formato || "";
+      document.getElementById("campanha").value = record.campanha || "";
+      document.getElementById("custo").value = record.custo || "";
+      document.getElementById("inicio").value = record.inicio || "";
+      document.getElementById("fim").value = record.fim || "";
+      document.getElementById("observacoes").value = record.observacoes || "";
+      editingId = record.id;
     }
 
     async function saveRecord(event) {
@@ -99,8 +105,13 @@
         timestamp: serverTimestamp()
       };
 
-      const docRef = doc(collection(db, getCollectionPath()));
-      await setDoc(docRef, dataObj);
+      if (editingId) {
+        await setDoc(doc(db, getCollectionPath(), editingId), dataObj, { merge: true });
+        editingId = null;
+      } else {
+        const docRef = doc(collection(db, getCollectionPath()));
+        await setDoc(docRef, dataObj);
+      }
       document.getElementById("record-form").reset();
     }
 
@@ -111,36 +122,31 @@
     window.onload = initializeFirebase;
     window.saveRecord = saveRecord;
     window.deleteRecord = deleteRecord;
+    window.editRecord = editRecord;
   </script>
 </head>
 <body class="p-6 bg-gray-100">
   <div class="max-w-7xl mx-auto">
     <header class="text-center mb-8 bg-white rounded-xl shadow p-6 border-b-4" style="border-color: var(--tijuca-blue);">
-      <img src="https://i.postimg.cc/bvySmsHG/Prancheta-1-4x.png" alt="Tijuca Alimentos" class="mx-auto h-16 mb-4">
+      <img src="https://i.postimg.cc/bvySmsHG/Prancheta-1-4x.png" class="mx-auto h-16 mb-4">
       <h1 class="text-2xl font-bold" style="color: var(--tijuca-blue);">Gerenciamento de Mídia</h1>
-      <p id="user-id-display" class="text-xs text-gray-500 mt-2">Carregando...</p>
-      <nav class="mt-4"><a href="index.html" class="text-[color:var(--tijuca-green)] hover:underline">← Voltar ao Painel</a></nav>
     </header>
 
-    <!-- Formulário -->
     <form id="record-form" onsubmit="saveRecord(event)" class="bg-white p-6 rounded-xl shadow mb-6">
       <div class="grid md:grid-cols-2 gap-4">
-        <label><span>Data</span><input type="date" id="data" required class="w-full border rounded p-2"></label>
-        <label><span>Responsável</span><input id="responsavel" required class="w-full border rounded p-2"></label>
-        <label><span>Veículo</span><input id="veiculo" required class="w-full border rounded p-2"></label>
-        <label><span>Formato</span><input id="formato" required class="w-full border rounded p-2"></label>
-        <label><span>Campanha</span><input id="campanha" required class="w-full border rounded p-2"></label>
-        <label><span>Custo (R$)</span><input type="number" step="0.01" id="custo" required class="w-full border rounded p-2"></label>
-        <label><span>Início</span><input type="date" id="inicio" required class="w-full border rounded p-2"></label>
-        <label><span>Fim</span><input type="date" id="fim" required class="w-full border rounded p-2"></label>
-        <label class="md:col-span-2"><span>Observações</span><textarea id="observacoes" class="w-full border rounded p-2"></textarea></label>
+        <input type="date" id="data" placeholder="Data" class="w-full border p-2">
+        <input id="responsavel" placeholder="Responsável" class="w-full border p-2">
+        <input id="veiculo" placeholder="Veículo" class="w-full border p-2">
+        <input id="formato" placeholder="Formato" class="w-full border p-2">
+        <input id="campanha" placeholder="Campanha" class="w-full border p-2">
+        <input type="number" step="0.01" id="custo" placeholder="Custo R$" class="w-full border p-2">
+        <input type="date" id="inicio" placeholder="Início" class="w-full border p-2">
+        <input type="date" id="fim" placeholder="Fim" class="w-full border p-2">
+        <textarea id="observacoes" placeholder="Observações" class="w-full border p-2"></textarea>
       </div>
-      <div class="mt-4 text-right">
-        <button type="submit" class="px-4 py-2 rounded text-white" style="background: var(--tijuca-blue);">Salvar</button>
-      </div>
+      <div class="mt-4 text-right"><button type="submit" class="px-4 py-2 text-white rounded" style="background: var(--tijuca-blue);">Salvar</button></div>
     </form>
 
-    <!-- Tabela -->
     <div class="bg-white rounded-xl shadow overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
         <thead style="background: var(--tijuca-yellow);">
