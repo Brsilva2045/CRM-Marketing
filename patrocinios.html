@@ -10,6 +10,7 @@
       --tijuca-yellow: #f5a800;
       --tijuca-blue: #003a70;
       --tijuca-green: #00662f;
+      --tijuca-red: #cc0000;
     }
   </style>
 
@@ -55,7 +56,13 @@
     function renderRecords(records) {
       const tbody = document.getElementById("records-table-body");
       tbody.innerHTML = "";
+
       records.forEach(record => {
+        const statusClass =
+          record.status === "Aprovado" ? "bg-[var(--tijuca-green)] text-white" :
+          record.status === "Negado" ? "bg-[var(--tijuca-red)] text-white" :
+          "bg-[var(--tijuca-yellow)] text-black"; // padrão Em análise
+
         const row = document.createElement("tr");
         row.className = "border-b hover:bg-gray-50";
         row.innerHTML = `
@@ -64,7 +71,14 @@
           <td class="px-4 py-2">${record.entidade || ""}</td>
           <td class="px-4 py-2">${record.cota || ""}</td>
           <td class="px-4 py-2">R$ ${(record.valor || 0).toFixed(2)}</td>
-          <td class="px-4 py-2">${record.status || ""}</td>
+          <td class="px-4 py-2">
+            <span class="px-2 py-1 rounded text-xs font-semibold ${statusClass}">${record.status || "Em análise"}</span>
+            <div class="mt-1 flex space-x-1">
+              <button onclick="updateStatus('${record.id}', 'Em análise')" class="px-2 py-1 bg-[var(--tijuca-yellow)] text-black rounded text-xs">Em análise</button>
+              <button onclick="updateStatus('${record.id}', 'Aprovado')" class="px-2 py-1 bg-[var(--tijuca-green)] text-white rounded text-xs">Aprovado</button>
+              <button onclick="updateStatus('${record.id}', 'Negado')" class="px-2 py-1 bg-[var(--tijuca-red)] text-white rounded text-xs">Negado</button>
+            </div>
+          </td>
           <td class="px-4 py-2">${record.midias || ""}</td>
           <td class="px-4 py-2">${record.obsBruno || ""}</td>
           <td class="px-4 py-2"><a href="${record.link || "#"}" target="_blank" class="text-blue-600 hover:underline">${record.link || ""}</a></td>
@@ -78,13 +92,16 @@
       });
     }
 
+    async function updateStatus(id, novoStatus) {
+      await setDoc(doc(db, getCollectionPath(), id), { status: novoStatus }, { merge: true });
+    }
+
     function editRecord(record) {
       document.getElementById("data").value = record.data || "";
       document.getElementById("responsavel").value = record.responsavel || "";
       document.getElementById("entidade").value = record.entidade || "";
       document.getElementById("cota").value = record.cota || "";
       document.getElementById("valor").value = record.valor || "";
-      document.getElementById("status").value = record.status || "";
       document.getElementById("midias").value = record.midias || "";
       document.getElementById("obsBruno").value = record.obsBruno || "";
       document.getElementById("link").value = record.link || "";
@@ -100,7 +117,7 @@
         entidade: document.getElementById("entidade").value,
         cota: document.getElementById("cota").value,
         valor: parseFloat(document.getElementById("valor").value) || 0,
-        status: document.getElementById("status").value,
+        status: "Em análise", // padrão
         midias: document.getElementById("midias").value,
         obsBruno: document.getElementById("obsBruno").value,
         link: document.getElementById("link").value,
@@ -126,6 +143,7 @@
     window.saveRecord = saveRecord;
     window.deleteRecord = deleteRecord;
     window.editRecord = editRecord;
+    window.updateStatus = updateStatus;
   </script>
 </head>
 <body class="p-6 bg-gray-100">
@@ -142,7 +160,6 @@
         <input id="entidade" placeholder="Entidade/Evento" class="w-full border p-2">
         <input id="cota" placeholder="Cota" class="w-full border p-2">
         <input type="number" step="0.01" id="valor" placeholder="Valor R$" class="w-full border p-2">
-        <input id="status" placeholder="Status" class="w-full border p-2">
         <input id="midias" placeholder="Mídias Incluídas" class="w-full border p-2">
         <textarea id="obsBruno" placeholder="Obs. Bruno" class="w-full border p-2"></textarea>
         <input id="link" placeholder="Link/E-mail" class="w-full border p-2">
