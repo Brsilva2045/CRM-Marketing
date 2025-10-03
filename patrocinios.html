@@ -75,19 +75,23 @@
             <span class="px-3 py-1 rounded text-xs font-semibold ${statusClass}">
               ${record.status || "Em análise"}
             </span>
-            <div class="mt-2 flex flex-wrap gap-2 text-xs">
-              <button onclick="updateStatus('${record.id}', 'Em análise')" class="px-2 py-1 bg-[var(--tijuca-yellow)] text-black rounded">Em análise</button>
-              <button onclick="updateStatus('${record.id}', 'Aprovado')" class="px-2 py-1 bg-[var(--tijuca-green)] text-white rounded">Aprovado</button>
-              <button onclick="updateStatus('${record.id}', 'Negado')" class="px-2 py-1 bg-[var(--tijuca-red)] text-white rounded">Negado</button>
-            </div>
           </td>
           <td class="px-4 py-2">${record.midias || ""}</td>
           <td class="px-4 py-2 text-sm text-gray-600 leading-snug max-w-xs whitespace-pre-line">${record.obsBruno || ""}</td>
           <td class="px-4 py-2"><a href="${record.link || "#"}" target="_blank" class="text-blue-600 hover:underline">${record.link || ""}</a></td>
           <td class="px-4 py-2 text-sm text-gray-600 leading-snug max-w-xs whitespace-pre-line">${record.obsLeticia || ""}</td>
           <td class="px-4 py-2">
-            <button onclick='editRecord(${JSON.stringify(record)})' class="text-blue-600 hover:underline mr-2">Editar</button>
-            <button onclick="deleteRecord('${record.id}')" class="text-red-600 hover:underline">Excluir</button>
+            <div class="flex flex-col gap-2">
+              <div>
+                <button onclick='editRecord(${JSON.stringify(record)})' class="text-blue-600 hover:underline mr-2">Editar</button>
+                <button onclick="deleteRecord('${record.id}')" class="text-red-600 hover:underline">Excluir</button>
+              </div>
+              <div class="flex flex-wrap gap-2 mt-1 text-xs">
+                <button onclick="updateStatus('${record.id}', 'Em análise')" class="px-2 py-1 bg-[var(--tijuca-yellow)] text-black rounded">Em análise</button>
+                <button onclick="updateStatus('${record.id}', 'Aprovado')" class="px-2 py-1 bg-[var(--tijuca-green)] text-white rounded">Aprovado</button>
+                <button onclick="updateStatus('${record.id}', 'Negado')" class="px-2 py-1 bg-[var(--tijuca-red)] text-white rounded">Negado</button>
+              </div>
+            </div>
           </td>
         `;
         tbody.appendChild(row);
@@ -119,7 +123,7 @@
         entidade: document.getElementById("entidade").value,
         cota: document.getElementById("cota").value,
         valor: parseFloat(document.getElementById("valor").value) || 0,
-        status: "Em análise", // padrão
+        status: "Em análise", // padrão inicial
         midias: document.getElementById("midias").value,
         obsBruno: document.getElementById("obsBruno").value,
         link: document.getElementById("link").value,
