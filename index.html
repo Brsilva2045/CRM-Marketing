@@ -47,11 +47,9 @@
     }
 
     async function loadResumo(collectionName, elementId, counterId) {
-      // Contador total
       const snapshotTotal = await getDocs(collection(db, collectionName));
       document.getElementById(counterId).innerText = snapshotTotal.size;
 
-      // Últimos 3 registros
       const q = query(collection(db, collectionName), orderBy("timestamp", "desc"), limit(3));
       onSnapshot(q, (snapshot) => {
         const container = document.getElementById(elementId);
@@ -91,10 +89,27 @@
     window.onload = initializeFirebase;
   </script>
 </head>
-<body class="p-6 bg-gray-100">
-  <div class="w-full px-6">
+<body class="bg-gray-100">
+
+  <!-- Navbar fixa -->
+  <nav class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
+    <div class="max-w-7xl mx-auto px-6 flex justify-between items-center h-16">
+      <div class="flex items-center space-x-3">
+        <img src="https://i.postimg.cc/bvySmsHG/Prancheta-1-4x.png" class="h-10">
+        <span class="text-lg font-bold text-[var(--tijuca-blue)]">Tijuca Marketing</span>
+      </div>
+      <div class="flex space-x-6">
+        <a href="doacoes.html" class="text-[var(--tijuca-green)] font-semibold hover:underline">Doações</a>
+        <a href="patrocinios.html" class="text-[var(--tijuca-green)] font-semibold hover:underline">Patrocínios</a>
+        <a href="midia.html" class="text-[var(--tijuca-green)] font-semibold hover:underline">Mídias</a>
+        <a href="midia_ooh.html" class="text-[var(--tijuca-green)] font-semibold hover:underline">Mídia OOH</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Conteúdo principal -->
+  <div class="w-full px-6 pt-24">
     <header class="text-center mb-8 bg-white rounded-xl shadow p-6 border-b-4" style="border-color: var(--tijuca-green);">
-      <img src="https://i.postimg.cc/bvySmsHG/Prancheta-1-4x.png" class="mx-auto h-16 mb-4">
       <h1 class="text-3xl font-extrabold tracking-wide" style="color: var(--tijuca-blue);">Painel de Marketing - Tijuca</h1>
     </header>
 
@@ -102,7 +117,10 @@
       <!-- Doações -->
       <div class="bg-white rounded-xl shadow p-4">
         <div class="flex justify-between items-center mb-2">
-          <h2 class="text-xl font-bold border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">Doações</h2>
+          <h2 class="text-xl font-bold flex items-center gap-2 border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
+            <img src="https://i.postimg.cc/d19whLDh/Ativo-1.png" class="h-6 w-6">
+            Doações
+          </h2>
           <span id="doacoes-total" class="text-lg font-semibold text-[var(--tijuca-blue)]">0</span>
         </div>
         <div id="doacoes-resumo" class="mb-2"></div>
@@ -112,7 +130,10 @@
       <!-- Patrocínios -->
       <div class="bg-white rounded-xl shadow p-4">
         <div class="flex justify-between items-center mb-2">
-          <h2 class="text-xl font-bold border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">Patrocínios</h2>
+          <h2 class="text-xl font-bold flex items-center gap-2 border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
+            <img src="https://i.postimg.cc/bN4rcStQ/Patrocinio.png" class="h-6 w-6">
+            Patrocínios
+          </h2>
           <span id="patrocinios-total" class="text-lg font-semibold text-[var(--tijuca-blue)]">0</span>
         </div>
         <div id="patrocinios-resumo" class="mb-2"></div>
@@ -122,7 +143,10 @@
       <!-- Mídias -->
       <div class="bg-white rounded-xl shadow p-4">
         <div class="flex justify-between items-center mb-2">
-          <h2 class="text-xl font-bold border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">Mídias</h2>
+          <h2 class="text-xl font-bold flex items-center gap-2 border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
+            <img src="https://i.postimg.cc/FsYzBV7D/Midias.png" class="h-6 w-6">
+            Mídias
+          </h2>
           <span id="midia-total" class="text-lg font-semibold text-[var(--tijuca-blue)]">0</span>
         </div>
         <div id="midia-resumo" class="mb-2"></div>
@@ -132,7 +156,10 @@
       <!-- Mídia OOH -->
       <div class="bg-white rounded-xl shadow p-4">
         <div class="flex justify-between items-center mb-2">
-          <h2 class="text-xl font-bold border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">Mídia OOH</h2>
+          <h2 class="text-xl font-bold flex items-center gap-2 border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
+            <img src="https://i.postimg.cc/Gh4t5xHF/Midia-OOH-1.png" class="h-6 w-6">
+            Mídia OOH
+          </h2>
           <span id="midia-ooh-total" class="text-lg font-semibold text-[var(--tijuca-blue)]">0</span>
         </div>
         <div id="midia-ooh-resumo" class="mb-2"></div>
