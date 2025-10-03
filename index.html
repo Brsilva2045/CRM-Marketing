@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel CRM Marketing</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+    // Configuração real do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDKNqGVrjbj8l7S7OIvN-w3CKmsj8twC98",
+      authDomain: "crm-marketing-b7767.firebaseapp.com",
+      projectId: "crm-marketing-b7767",
+      storageBucket: "crm-marketing-b7767.appspot.com",
+      messagingSenderId: "27887822785",
+      appId: "1:27887822785:web:4e4bee6d07cc9007433140",
+      measurementId: "G-LX1Z71R97G"
+    };
+
+    let auth;
+
+    async function initializeFirebase() {
+      const app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+
+      // Login anônimo
+      await signInAnonymously(auth);
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          document.getElementById("user-id-display").textContent =
+            "Conectado como usuário anônimo (UID: " + user.uid + ")";
+        } else {
+          document.getElementById("user-id-display").textContent =
+            "Não autenticado!";
+        }
+      });
+    }
+
+    window.onload = initializeFirebase;
+  </script>
+</head>
+<body class="bg-gray-100 p-8">
+  <div class="max-w-6xl mx-auto">
+    <header class="text-center mb-10 bg-white rounded-xl shadow-lg p-6 border-b-4 border-blue-600">
+      <h1 class="text-3xl font-extrabold text-gray-800">Painel CRM Marketing</h1>
+      <p id="user-id-display" class="text-xs text-gray-500 mt-2">Carregando...</p>
+    </header>
+
+    <section class="grid md:grid-cols-2 gap-6">
+      <!-- Doações -->
+      <a href="doacoes.html" class="block p-6 bg-green-100 rounded-xl shadow hover:shadow-lg transition transform hover:scale-[1.02]">
+        <h2 class="text-xl font-bold text-green-800">📦 Doações</h2>
+        <p class="text-gray-700 mt-2">Gerencie entradas de doações em tempo real.</p>
+      </a>
+
+      <!-- Mídia -->
+      <a href="midia.html" class="block p-6 bg-blue-100 rounded-xl shadow hover:shadow-lg transition transform hover:scale-[1.02]">
+        <h2 class="text-xl font-bold text-blue-800">🖼️ Mídia</h2>
+        <p class="text-gray-700 mt-2">Controle de mídia digital e campanhas.</p>
+      </a>
+
+      <!-- Mídia OOH -->
+      <a href="midia_ooh.html" class="block p-6 bg-yellow-100 rounded-xl shadow hover:shadow-lg transition transform hover:scale-[1.02]">
+        <h2 class="text-xl font-bold text-yellow-800">🏙️ Mídia OOH</h2>
+        <p class="text-gray-700 mt-2">Gerenciamento de outdoors, painéis e mídia externa.</p>
+      </a>
+
+      <!-- Patrocínios -->
+      <a href="patrocinios.html" class="block p-6 bg-red-100 rounded-xl shadow hover:shadow-lg transition transform hover:scale-[1.02]">
+        <h2 class="text-xl font-bold text-red-800">🤝 Patrocínios</h2>
+        <p class="text-gray-700 mt-2">Acompanhe propostas e solicitações de patrocínios.</p>
+      </a>
+    </section>
+  </div>
+</body>
+</html>

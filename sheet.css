@@ -1,0 +1,133 @@
+/*
+ * ARQUIVO CSS: resources/sheet.css
+ * Layout Aprimorado para Tabelas Exportadas (Relatórios Estáticos)
+ */
+
+/* --- Configurações de Fundo e Fonte --- */
+body {
+    font-family: 'Inter', sans-serif, Arial;
+    margin: 0;
+    padding: 20px;
+    background-color: #f7f9fb; /* Fundo muito claro */
+    color: #333;
+}
+
+/* --- Tabela Principal (Componente Central) --- */
+.ritz {
+    width: 100%;
+    /* Garante rolagem horizontal para tabelas muito largas em telas pequenas */
+    overflow-x: auto; 
+    padding-top: 50px; /* Espaço para o menu fixo, se incluído nos relatórios */
+}
+
+.waffle {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 20px 0;
+    /* Estilo de Card: Sombra e cantos arredondados */
+    box-shadow: 0 8px 15px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+    background-color: #ffffff;
+    border-radius: 12px;
+    overflow: hidden; /* Garante que o conteúdo respeite o arredondamento */
+}
+
+/* Estilo de Links */
+.waffle a {
+    color: #1e40af; /* Azul forte (similar ao Tijuca) para links */
+    text-decoration: none;
+    font-weight: 500;
+}
+.waffle a:hover {
+    text-decoration: underline;
+}
+
+/* --- Estilo de Células (TH e TD) --- */
+.waffle th, .waffle td {
+    padding: 10px 14px; 
+    border: 1px solid #f0f0f0; /* Linhas mais finas e discretas */
+    text-align: left;
+    white-space: normal;
+    vertical-align: middle;
+    font-size: 10pt;
+    line-height: 1.5;
+}
+
+/* Linhas Impares/Pares (Stripe effect) */
+.waffle tbody tr:nth-child(even) {
+    background-color: #fafafa; /* Linhas mais claras */
+}
+.waffle tbody tr:hover {
+    background-color: #f0f8ff; /* Efeito hover suave */
+}
+
+
+/* --- Cabeçalho da Tabela --- */
+.waffle thead th {
+    background-color: #2563eb; /* Azul escuro principal */
+    font-weight: 700;
+    color: #ffffff;
+    text-transform: uppercase;
+    font-size: 9pt;
+    position: sticky;
+    top: 50px; /* Coloca o cabeçalho abaixo do menu fixo (se existir) */
+    z-index: 10;
+    border-bottom: 3px solid #1e40af;
+}
+
+/* Linhas de Cabeçalho (índices A, B, C...) */
+.row-headers-background {
+    background-color: #f7f7f7 !important;
+    font-weight: 600;
+    color: #6b7280;
+    text-align: center;
+    border-right: 1px solid #e0e0e0;
+}
+
+/* --- Formatação de Conteúdo Específico (ajustes de cores e alinhamento) --- */
+
+/* Alinhamento de Texto e Números */
+.ritz .waffle .s0, .ritz .waffle .s1, .ritz .waffle .s5 {
+    text-align: left;
+}
+.ritz .waffle .s2, .ritz .waffle .s4, .ritz .waffle .s3 {
+    text-align: right;
+}
+
+/* Estilo para Moeda/Números (S4 é comum para números formatados) */
+.ritz .waffle .s4 {
+    color: #065f46; /* Verde escuro para valores */
+    font-weight: 600;
+    text-align: right;
+}
+
+/* Estilo para Status (Pode ser ajustado se o export do Google Sheet usar classes específicas) */
+/* Exemplo de cores para palavras-chave, que podem ser aplicadas via CSS externo se a exportação for limpa */
+.waffle td:contains('Entregue') {
+    color: #15803d; /* Verde */
+    font-weight: 700;
+}
+.waffle td:contains('Pendente') {
+    color: #b45309; /* Laranja/Amarelo Escuro */
+    font-weight: 700;
+}
+.waffle td:contains('Negado') {
+    color: #dc2626; /* Vermelho */
+    font-weight: 700;
+}
+
+/* Responsividade em Telas Pequenas */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    .waffle {
+        border-radius: 8px;
+    }
+    .waffle th, .waffle td {
+        padding: 8px;
+        font-size: 9.5pt;
+    }
+}
+```eof
+
+Ao salvar este arquivo, todos os seus relatórios estáticos (`doacoes.html`, `midia.html`, etc.) serão automaticamente atualizados com este novo visual!
