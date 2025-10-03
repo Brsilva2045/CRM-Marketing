@@ -61,10 +61,10 @@
         const statusClass =
           record.status === "Aprovado" ? "bg-[var(--tijuca-green)] text-white" :
           record.status === "Negado" ? "bg-[var(--tijuca-red)] text-white" :
-          "bg-[var(--tijuca-yellow)] text-black"; // padrão Em análise
+          "bg-[var(--tijuca-yellow)] text-black"; // padrão "Em análise"
 
         const row = document.createElement("tr");
-        row.className = "border-b hover:bg-gray-50";
+        row.className = "border-b hover:bg-gray-50 align-top";
         row.innerHTML = `
           <td class="px-4 py-2">${record.data || ""}</td>
           <td class="px-4 py-2">${record.responsavel || ""}</td>
@@ -72,17 +72,19 @@
           <td class="px-4 py-2">${record.cota || ""}</td>
           <td class="px-4 py-2">R$ ${(record.valor || 0).toFixed(2)}</td>
           <td class="px-4 py-2">
-            <span class="px-2 py-1 rounded text-xs font-semibold ${statusClass}">${record.status || "Em análise"}</span>
-            <div class="mt-1 flex space-x-1">
-              <button onclick="updateStatus('${record.id}', 'Em análise')" class="px-2 py-1 bg-[var(--tijuca-yellow)] text-black rounded text-xs">Em análise</button>
-              <button onclick="updateStatus('${record.id}', 'Aprovado')" class="px-2 py-1 bg-[var(--tijuca-green)] text-white rounded text-xs">Aprovado</button>
-              <button onclick="updateStatus('${record.id}', 'Negado')" class="px-2 py-1 bg-[var(--tijuca-red)] text-white rounded text-xs">Negado</button>
+            <span class="px-3 py-1 rounded text-xs font-semibold ${statusClass}">
+              ${record.status || "Em análise"}
+            </span>
+            <div class="mt-2 flex flex-wrap gap-2 text-xs">
+              <button onclick="updateStatus('${record.id}', 'Em análise')" class="px-2 py-1 bg-[var(--tijuca-yellow)] text-black rounded">Em análise</button>
+              <button onclick="updateStatus('${record.id}', 'Aprovado')" class="px-2 py-1 bg-[var(--tijuca-green)] text-white rounded">Aprovado</button>
+              <button onclick="updateStatus('${record.id}', 'Negado')" class="px-2 py-1 bg-[var(--tijuca-red)] text-white rounded">Negado</button>
             </div>
           </td>
           <td class="px-4 py-2">${record.midias || ""}</td>
-          <td class="px-4 py-2">${record.obsBruno || ""}</td>
+          <td class="px-4 py-2 text-sm text-gray-600 leading-snug max-w-xs whitespace-pre-line">${record.obsBruno || ""}</td>
           <td class="px-4 py-2"><a href="${record.link || "#"}" target="_blank" class="text-blue-600 hover:underline">${record.link || ""}</a></td>
-          <td class="px-4 py-2">${record.obsLeticia || ""}</td>
+          <td class="px-4 py-2 text-sm text-gray-600 leading-snug max-w-xs whitespace-pre-line">${record.obsLeticia || ""}</td>
           <td class="px-4 py-2">
             <button onclick='editRecord(${JSON.stringify(record)})' class="text-blue-600 hover:underline mr-2">Editar</button>
             <button onclick="deleteRecord('${record.id}')" class="text-red-600 hover:underline">Excluir</button>
@@ -165,7 +167,9 @@
         <input id="link" placeholder="Link/E-mail" class="w-full border p-2">
         <textarea id="obsLeticia" placeholder="Obs. Letícia" class="w-full border p-2"></textarea>
       </div>
-      <div class="mt-4 text-right"><button type="submit" class="px-4 py-2 text-white rounded" style="background: var(--tijuca-green);">Salvar</button></div>
+      <div class="mt-4 text-right">
+        <button type="submit" class="px-4 py-2 text-white rounded" style="background: var(--tijuca-green);">Salvar</button>
+      </div>
     </form>
 
     <div class="bg-white rounded-xl shadow overflow-x-auto">
