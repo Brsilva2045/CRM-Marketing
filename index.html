@@ -59,11 +59,25 @@
 
         snapshot.docs.forEach(doc => {
           const data = doc.data();
+
+          // Badge de status (para doações/patrocínios)
+          let statusBadge = "";
+          if (data.status) {
+            let colorClass =
+              data.status === "Aprovado" ? "bg-[var(--tijuca-green)] text-white" :
+              data.status === "Negado" ? "bg-[var(--tijuca-red)] text-white" :
+              "bg-[var(--tijuca-yellow)] text-black";
+            statusBadge = `<span class="px-2 py-1 text-xs font-semibold rounded ${colorClass}">${data.status}</span>`;
+          }
+
           const item = document.createElement("div");
-          item.className = "border-b py-2 text-sm";
+          item.className = "border-b py-2 text-sm flex justify-between items-center";
           item.innerHTML = `
-            <p><span class="font-semibold">${data.responsavel || "N/A"}</span> - ${data.data || ""}</p>
-            <p class="text-gray-600 truncate">${data.projeto || data.entidade || data.campanha || data.fornecedor || "—"}</p>
+            <div class="pr-4">
+              <p><span class="font-semibold">${data.responsavel || "N/A"}</span> - ${data.data || ""}</p>
+              <p class="text-gray-600 truncate">${data.projeto || data.entidade || data.campanha || data.fornecedor || "—"}</p>
+            </div>
+            <div>${statusBadge}</div>
           `;
           container.appendChild(item);
         });
