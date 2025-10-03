@@ -31,18 +31,14 @@
 
     let db, auth, editingId = null;
 
-    function getCollectionPath() {
-      return `patrocinios_v2`;
-    }
+    function getCollectionPath() { return `patrocinios_v2`; }
 
     async function initializeFirebase() {
       const app = initializeApp(firebaseConfig);
       db = getFirestore(app);
       auth = getAuth(app);
       await signInAnonymously(auth);
-      onAuthStateChanged(auth, (user) => {
-        if (user) startDataListener();
-      });
+      onAuthStateChanged(auth, (user) => { if (user) startDataListener(); });
     }
 
     function startDataListener() {
@@ -61,7 +57,7 @@
         const statusClass =
           record.status === "Aprovado" ? "bg-[var(--tijuca-green)] text-white" :
           record.status === "Negado" ? "bg-[var(--tijuca-red)] text-white" :
-          "bg-[var(--tijuca-yellow)] text-black"; // padrão "Em análise"
+          "bg-[var(--tijuca-yellow)] text-black";
 
         const row = document.createElement("tr");
         row.className = "border-b hover:bg-gray-50 align-top";
@@ -71,15 +67,11 @@
           <td class="px-4 py-2">${record.entidade || ""}</td>
           <td class="px-4 py-2">${record.cota || ""}</td>
           <td class="px-4 py-2">R$ ${(record.valor || 0).toFixed(2)}</td>
-          <td class="px-4 py-2">
-            <span class="px-3 py-1 rounded text-xs font-semibold ${statusClass}">
-              ${record.status || "Em análise"}
-            </span>
-          </td>
-          <td class="px-4 py-2">${record.midias || ""}</td>
-          <td class="px-4 py-2 text-sm text-gray-600 leading-snug max-w-xs whitespace-pre-line">${record.obsBruno || ""}</td>
-          <td class="px-4 py-2"><a href="${record.link || "#"}" target="_blank" class="text-blue-600 hover:underline">${record.link || ""}</a></td>
-          <td class="px-4 py-2 text-sm text-gray-600 leading-snug max-w-xs whitespace-pre-line">${record.obsLeticia || ""}</td>
+          <td class="px-4 py-2"><span class="px-3 py-1 rounded text-xs font-semibold ${statusClass}">${record.status || "Em análise"}</span></td>
+          <td class="px-4 py-2">${record.midias || "—"}</td>
+          <td class="px-4 py-2 text-sm text-gray-600 leading-snug max-w-xs whitespace-pre-line">${record.obsBruno || "—"}</td>
+          <td class="px-4 py-2">${record.link ? `<a href="${record.link}" target="_blank" class="text-blue-600 hover:underline">Link</a>` : "—"}</td>
+          <td class="px-4 py-2 text-sm text-gray-600 leading-snug max-w-xs whitespace-pre-line">${record.obsLeticia || "—"}</td>
           <td class="px-4 py-2">
             <div class="flex flex-col gap-2">
               <div>
@@ -123,7 +115,7 @@
         entidade: document.getElementById("entidade").value,
         cota: document.getElementById("cota").value,
         valor: parseFloat(document.getElementById("valor").value) || 0,
-        status: "Em análise", // padrão inicial
+        status: "Em análise",
         midias: document.getElementById("midias").value,
         obsBruno: document.getElementById("obsBruno").value,
         link: document.getElementById("link").value,
@@ -153,7 +145,7 @@
   </script>
 </head>
 <body class="p-6 bg-gray-100">
-  <div class="max-w-7xl mx-auto">
+  <div class="w-full px-6">
     <header class="text-center mb-8 bg-white rounded-xl shadow p-6 border-b-4" style="border-color: var(--tijuca-green);">
       <img src="https://i.postimg.cc/bvySmsHG/Prancheta-1-4x.png" class="mx-auto h-16 mb-4">
       <h1 class="text-2xl font-bold" style="color: var(--tijuca-blue);">Gerenciamento de Patrocínios</h1>
