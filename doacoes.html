@@ -28,7 +28,7 @@
       measurementId: "G-LX1Z71R97G"
     };
 
-    let db, auth;
+    let db, auth, editingId = null;
 
     function getCollectionPath() {
       return `doacoes_v2`;
@@ -41,10 +41,7 @@
 
       await signInAnonymously(auth);
       onAuthStateChanged(auth, (user) => {
-        if (user) {
-          document.getElementById("user-id-display").textContent = `Conectado`;
-          startDataListener();
-        }
+        if (user) startDataListener();
       });
     }
 
@@ -60,15 +57,11 @@
       const tbody = document.getElementById("records-table-body");
       tbody.innerHTML = "";
 
-      if (records.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-gray-500">Nenhuma doação encontrada.</td></tr>`;
-        return;
-      }
-
       records.forEach(record => {
         const row = document.createElement("tr");
         row.className = "border-b hover:bg-gray-50";
         row.innerHTML = `
+          <td class="px-4 py-2">${record.data || ""}</td>
           <td class="px-4 py-2">${record.responsavel || "N/A"}</td>
           <td class="px-4 py-2">${record.projeto || "N/A"}</td>
           <td class="px-4 py-2">${record.descricao || "N/A"}</td>
@@ -77,15 +70,32 @@
           <td class="px-4 py-2"><a href="${record.link || "#"}" target="_blank" class="text-blue-600 hover:underline">${record.link || "N/A"}</a></td>
           <td class="px-4 py-2">${record.obsBruno || "N/A"}</td>
           <td class="px-4 py-2">${record.mensal || "Não"}</td>
-          <td class="px-4 py-2"><button onclick="deleteRecord('${record.id}')" class="text-red-600 hover:underline">Excluir</button></td>
+          <td class="px-4 py-2">
+            <button onclick='editRecord(${JSON.stringify(record)})' class="text-blue-600 hover:underline mr-2">Editar</button>
+            <button onclick="deleteRecord('${record.id}')" class="text-red-600 hover:underline">Excluir</button>
+          </td>
         `;
         tbody.appendChild(row);
       });
     }
 
+    function editRecord(record) {
+      document.getElementById("data").value = record.data || "";
+      document.getElementById("responsavel").value = record.responsavel || "";
+      document.getElementById("projeto").value = record.projeto || "";
+      document.getElementById("descricao").value = record.descricao || "";
+      document.getElementById("valor").value = record.valor || "";
+      document.getElementById("status").value = record.status || "Pendente";
+      document.getElementById("link").value = record.link || "";
+      document.getElementById("obsBruno").value = record.obsBruno || "";
+      document.getElementById("mensal").checked = record.mensal === "Sim";
+      editingId = record.id;
+    }
+
     async function saveRecord(event) {
       event.preventDefault();
       const dataObj = {
+        data: document.getElementById("data").value,
         responsavel: document.getElementById("responsavel").value,
         projeto: document.getElementById("projeto").value,
         descricao: document.getElementById("descricao").value,
@@ -97,8 +107,13 @@
         timestamp: serverTimestamp()
       };
 
-      const docRef = doc(collection(db, getCollectionPath()));
-      await setDoc(docRef, dataObj);
+      if (editingId) {
+        await setDoc(doc(db, getCollectionPath(), editingId), dataObj, { merge: true });
+        editingId = null;
+      } else {
+        const docRef = doc(collection(db, getCollectionPath()));
+        await setDoc(docRef, dataObj);
+      }
       document.getElementById("record-form").reset();
     }
 
@@ -109,6 +124,7 @@
     window.onload = initializeFirebase;
     window.saveRecord = saveRecord;
     window.deleteRecord = deleteRecord;
+    window.editRecord = editRecord;
   </script>
 </head>
 <body class="p-6 bg-gray-100">
@@ -116,25 +132,21 @@
     <header class="text-center mb-8 bg-white rounded-xl shadow p-6 border-b-4" style="border-color: var(--tijuca-green);">
       <img src="https://i.postimg.cc/bvySmsHG/Prancheta-1-4x.png" alt="Tijuca Alimentos" class="mx-auto h-16 mb-4">
       <h1 class="text-2xl font-bold" style="color: var(--tijuca-blue);">Gerenciamento de Doações</h1>
-      <p id="user-id-display" class="text-xs text-gray-500 mt-2">Carregando...</p>
       <nav class="mt-4"><a href="index.html" class="text-[color:var(--tijuca-green)] hover:underline">← Voltar ao Painel</a></nav>
     </header>
 
     <!-- Formulário -->
     <form id="record-form" onsubmit="saveRecord(event)" class="bg-white p-6 rounded-xl shadow mb-6">
       <div class="grid md:grid-cols-2 gap-4">
+        <label><span>Data da Solicitação</span><input type="date" id="data" required class="w-full border rounded p-2"></label>
         <label><span>Responsável</span><input id="responsavel" required class="w-full border rounded p-2"></label>
         <label><span>Projeto/Instituição</span><input id="projeto" required class="w-full border rounded p-2"></label>
         <label><span>Descrição</span><input id="descricao" required class="w-full border rounded p-2"></label>
         <label><span>Valor (R$)</span><input type="number" step="0.01" id="valor" required class="w-full border rounded p-2"></label>
-        <label><span>Status</span>
-          <select id="status" class="w-full border rounded p-2">
-            <option>Pendente</option><option>Aprovado</option><option>Negado</option>
-          </select>
-        </label>
+        <label><span>Status</span><input id="status" class="w-full border rounded p-2"></label>
         <label><span>Link/E-mail</span><input id="link" class="w-full border rounded p-2"></label>
         <label><span>Obs. Bruno</span><textarea id="obsBruno" class="w-full border rounded p-2"></textarea></label>
-        <label class="flex items-center space-x-2"><input type="checkbox" id="mensal"><span>Doação mensal</span></label>
+        <label class="flex items-center"><input type="checkbox" id="mensal"><span>Doação mensal</span></label>
       </div>
       <div class="mt-4 text-right">
         <button type="submit" class="px-4 py-2 rounded text-white" style="background: var(--tijuca-green);">Salvar</button>
@@ -146,6 +158,7 @@
       <table class="min-w-full divide-y divide-gray-200">
         <thead style="background: var(--tijuca-yellow);">
           <tr>
+            <th class="px-4 py-2">Data</th>
             <th class="px-4 py-2">Responsável</th>
             <th class="px-4 py-2">Projeto</th>
             <th class="px-4 py-2">Descrição</th>
