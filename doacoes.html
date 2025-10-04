@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerenciamento de Doações - Tijuca</title>
+  <title>Doações - Tijuca</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
     :root {
       --tijuca-yellow: #f5a800;
@@ -54,34 +55,38 @@
       tbody.innerHTML = "";
 
       records.forEach(record => {
-        const statusClass =
-          record.status === "Aprovado" ? "bg-[var(--tijuca-green)] text-white" :
-          record.status === "Negado" ? "bg-[var(--tijuca-red)] text-white" :
-          "bg-[var(--tijuca-yellow)] text-black";
-
         const row = document.createElement("tr");
         row.className = "border-b hover:bg-gray-50 align-top";
+
+        // Badge de status
+        let statusBadge = "";
+        if (record.status) {
+          let colorClass =
+            record.status === "Aprovado"
+              ? "bg-[var(--tijuca-green)] text-white"
+              : record.status === "Negado"
+              ? "bg-[var(--tijuca-red)] text-white"
+              : "bg-[var(--tijuca-yellow)] text-black";
+          statusBadge = `<span class="px-2 py-1 text-xs font-semibold rounded ${colorClass}">${record.status}</span>`;
+        }
+
         row.innerHTML = `
-          <td class="px-4 py-2">${record.data || ""}</td>
-          <td class="px-4 py-2">${record.responsavel || "N/A"}</td>
-          <td class="px-4 py-2">${record.projeto || "N/A"}</td>
-          <td class="px-4 py-2">${record.descricao || "N/A"}</td>
-          <td class="px-4 py-2 text-right font-semibold text-green-700">R$ ${(record.valor || 0).toFixed(2)}</td>
-          <td class="px-4 py-2"><span class="px-3 py-1 rounded text-xs font-semibold ${statusClass}">${record.status || "Em análise"}</span></td>
+          <td class="px-4 py-2">${record.dataSolicitacao || ""}</td>
+          <td class="px-4 py-2">${record.responsavel || ""}</td>
+          <td class="px-4 py-2">${record.projeto || ""}</td>
+          <td class="px-4 py-2">${record.descricaoProduto || ""}</td>
+          <td class="px-4 py-2">R$ ${(record.valor || 0).toFixed(2)}</td>
+          <td class="px-4 py-2">${statusBadge}</td>
           <td class="px-4 py-2">${record.link ? `<a href="${record.link}" target="_blank" class="text-blue-600 hover:underline">Link</a>` : "—"}</td>
-          <td class="px-4 py-2 text-sm text-gray-600 leading-snug max-w-xs whitespace-pre-line">${record.obsBruno || "—"}</td>
-          <td class="px-4 py-2">${record.mensal || "Não"}</td>
-          <td class="px-4 py-2">
-            <div class="flex flex-col gap-2">
-              <div>
-                <button onclick='editRecord(${JSON.stringify(record)})' class="text-blue-600 hover:underline mr-2">Editar</button>
-                <button onclick="deleteRecord('${record.id}')" class="text-red-600 hover:underline">Excluir</button>
-              </div>
-              <div class="flex flex-wrap gap-2 mt-1 text-xs">
-                <button onclick="updateStatus('${record.id}', 'Em análise')" class="px-2 py-1 bg-[var(--tijuca-yellow)] text-black rounded">Em análise</button>
-                <button onclick="updateStatus('${record.id}', 'Aprovado')" class="px-2 py-1 bg-[var(--tijuca-green)] text-white rounded">Aprovado</button>
-                <button onclick="updateStatus('${record.id}', 'Negado')" class="px-2 py-1 bg-[var(--tijuca-red)] text-white rounded">Negado</button>
-              </div>
+          <td class="px-4 py-2">${record.email || ""}</td>
+          <td class="px-4 py-2 text-sm text-gray-600 leading-snug whitespace-pre-line">${record.observacoes || "—"}</td>
+          <td class="px-4 py-2 space-y-1">
+            <button onclick='editRecord(${JSON.stringify(record)})' class="text-blue-600 hover:underline block">Editar</button>
+            <button onclick="deleteRecord('${record.id}')" class="text-red-600 hover:underline block">Excluir</button>
+            <div class="flex space-x-1 mt-1">
+              <button onclick="updateStatus('${record.id}', 'Em análise')" class="bg-[var(--tijuca-yellow)] text-black px-2 py-1 text-xs rounded">↺</button>
+              <button onclick="updateStatus('${record.id}', 'Aprovado')" class="bg-[var(--tijuca-green)] text-white px-2 py-1 text-xs rounded">✓</button>
+              <button onclick="updateStatus('${record.id}', 'Negado')" class="bg-[var(--tijuca-red)] text-white px-2 py-1 text-xs rounded">✕</button>
             </div>
           </td>
         `;
@@ -89,49 +94,66 @@
       });
     }
 
-    async function updateStatus(id, novoStatus) {
-      await setDoc(doc(db, getCollectionPath(), id), { status: novoStatus }, { merge: true });
-    }
-
     function editRecord(record) {
-      document.getElementById("data").value = record.data || "";
+      document.getElementById("dataSolicitacao").value = record.dataSolicitacao || "";
       document.getElementById("responsavel").value = record.responsavel || "";
       document.getElementById("projeto").value = record.projeto || "";
-      document.getElementById("descricao").value = record.descricao || "";
+      document.getElementById("descricaoProduto").value = record.descricaoProduto || "";
       document.getElementById("valor").value = record.valor || "";
       document.getElementById("link").value = record.link || "";
-      document.getElementById("obsBruno").value = record.obsBruno || "";
-      document.getElementById("mensal").checked = record.mensal === "Sim";
+      document.getElementById("email").value = record.email || "";
+      document.getElementById("observacoes").value = record.observacoes || "";
       editingId = record.id;
     }
 
     async function saveRecord(event) {
       event.preventDefault();
       const dataObj = {
-        data: document.getElementById("data").value,
+        dataSolicitacao: document.getElementById("dataSolicitacao").value,
         responsavel: document.getElementById("responsavel").value,
         projeto: document.getElementById("projeto").value,
-        descricao: document.getElementById("descricao").value,
+        descricaoProduto: document.getElementById("descricaoProduto").value,
         valor: parseFloat(document.getElementById("valor").value) || 0,
-        status: "Em análise",
         link: document.getElementById("link").value,
-        obsBruno: document.getElementById("obsBruno").value,
-        mensal: document.getElementById("mensal").checked ? "Sim" : "Não",
+        email: document.getElementById("email").value,
+        observacoes: document.getElementById("observacoes").value,
+        status: "Em análise",
         timestamp: serverTimestamp()
       };
 
-      if (editingId) {
-        await setDoc(doc(db, getCollectionPath(), editingId), dataObj, { merge: true });
-        editingId = null;
-      } else {
-        const docRef = doc(collection(db, getCollectionPath()));
-        await setDoc(docRef, dataObj);
+      try {
+        if (editingId) {
+          await setDoc(doc(db, getCollectionPath(), editingId), dataObj, { merge: true });
+          editingId = null;
+          showToast("Registro atualizado com sucesso!", "info");
+        } else {
+          const docRef = doc(collection(db, getCollectionPath()));
+          await setDoc(docRef, dataObj);
+          showToast("Registro salvo com sucesso!", "success");
+        }
+        document.getElementById("record-form").reset();
+      } catch (e) {
+        console.error(e);
+        showToast("Erro ao salvar!", "error");
       }
-      document.getElementById("record-form").reset();
+    }
+
+    async function updateStatus(id, status) {
+      try {
+        await setDoc(doc(db, getCollectionPath(), id), { status }, { merge: true });
+        showToast(`Status atualizado para ${status}!`, "info");
+      } catch (e) {
+        showToast("Erro ao atualizar status!", "error");
+      }
     }
 
     async function deleteRecord(id) {
-      await deleteDoc(doc(db, getCollectionPath(), id));
+      try {
+        await deleteDoc(doc(db, getCollectionPath(), id));
+        showToast("Registro excluído!", "error");
+      } catch (e) {
+        showToast("Erro ao excluir!", "error");
+      }
     }
 
     window.onload = initializeFirebase;
@@ -141,26 +163,27 @@
     window.updateStatus = updateStatus;
   </script>
 </head>
+
 <body class="p-6 bg-gray-100">
-  <div class="w-full px-6"> <!-- expandido -->
+  <div class="w-full px-6">
     <header class="text-center mb-8 bg-white rounded-xl shadow p-6 border-b-4" style="border-color: var(--tijuca-green);">
       <img src="https://i.postimg.cc/bvySmsHG/Prancheta-1-4x.png" class="mx-auto h-16 mb-4">
-      <h1 class="text-2xl font-bold" style="color: var(--tijuca-blue);">Gerenciamento de Doações</h1>
+      <h1 class="text-2xl font-bold" style="color: var(--tijuca-blue);">Gestão de Doações</h1>
     </header>
 
     <form id="record-form" onsubmit="saveRecord(event)" class="bg-white p-6 rounded-xl shadow mb-6">
       <div class="grid md:grid-cols-2 gap-4">
-        <label><span>Data da Solicitação</span><input type="date" id="data" required class="w-full border rounded p-2"></label>
-        <label><span>Responsável</span><input id="responsavel" required class="w-full border rounded p-2"></label>
-        <label><span>Projeto/Instituição</span><input id="projeto" required class="w-full border rounded p-2"></label>
-        <label><span>Descrição</span><input id="descricao" required class="w-full border rounded p-2"></label>
-        <label><span>Valor (R$)</span><input type="number" step="0.01" id="valor" required class="w-full border rounded p-2"></label>
-        <label><span>Link/E-mail</span><input id="link" class="w-full border rounded p-2"></label>
-        <label><span>Obs. Bruno</span><textarea id="obsBruno" class="w-full border rounded p-2"></textarea></label>
-        <label class="flex items-center"><input type="checkbox" id="mensal"><span class="ml-2">Doação mensal</span></label>
+        <input type="date" id="dataSolicitacao" class="w-full border p-2">
+        <input id="responsavel" placeholder="Responsável pela solicitação" class="w-full border p-2">
+        <input id="projeto" placeholder="Projeto/Instituição" class="w-full border p-2">
+        <input id="descricaoProduto" placeholder="Descrição do produto" class="w-full border p-2">
+        <input type="number" step="0.01" id="valor" placeholder="Valor (R$)" class="w-full border p-2">
+        <input id="link" placeholder="Link" class="w-full border p-2">
+        <input id="email" placeholder="E-mail" class="w-full border p-2">
+        <textarea id="observacoes" placeholder="Observações" class="w-full border p-2"></textarea>
       </div>
       <div class="mt-4 text-right">
-        <button type="submit" class="px-4 py-2 rounded text-white" style="background: var(--tijuca-green);">Salvar</button>
+        <button type="submit" class="px-4 py-2 text-white rounded" style="background: var(--tijuca-green);">Salvar</button>
       </div>
     </form>
 
@@ -175,8 +198,8 @@
             <th class="px-4 py-2">Valor</th>
             <th class="px-4 py-2">Status</th>
             <th class="px-4 py-2">Link</th>
-            <th class="px-4 py-2">Obs. Bruno</th>
-            <th class="px-4 py-2">Mensal</th>
+            <th class="px-4 py-2">E-mail</th>
+            <th class="px-4 py-2">Observações</th>
             <th class="px-4 py-2">Ações</th>
           </tr>
         </thead>
@@ -184,5 +207,30 @@
       </table>
     </div>
   </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 hidden px-4 py-3 rounded-lg shadow-lg text-white text-sm font-semibold z-50 transition-all duration-500">
+    <span id="toast-message"></span>
+  </div>
+
+  <script>
+    function showToast(message, type = "success") {
+      const toast = document.getElementById("toast");
+      const msg = document.getElementById("toast-message");
+      const colors = {
+        success: "bg-[var(--tijuca-green)]",
+        error: "bg-[var(--tijuca-red)]",
+        info: "bg-[var(--tijuca-blue)]",
+      };
+      toast.className = "fixed bottom-6 right-6 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-semibold z-50 transition-all duration-500 " + colors[type];
+      msg.textContent = message;
+      toast.classList.remove("hidden", "opacity-0");
+      toast.classList.add("opacity-100");
+      setTimeout(() => {
+        toast.classList.add("opacity-0");
+        setTimeout(() => toast.classList.add("hidden"), 500);
+      }, 2500);
+    }
+  </script>
 </body>
 </html>
