@@ -80,7 +80,10 @@
           <td class="px-4 py-2">${record.midiasIncluidas || ""}</td>
           <td class="px-4 py-2">${record.link ? `<a href="${record.link}" target="_blank" class="text-blue-600 hover:underline">Link</a>` : "—"}</td>
           <td class="px-4 py-2">${record.email || ""}</td>
-          <td class="px-4 py-2 text-sm text-gray-600 leading-snug whitespace-pre-line">${record.observacoes || "—"}</td>
+          <td class="px-4 py-2 text-sm text-gray-600 leading-snug whitespace-pre-line">
+            <p><strong>Bruno:</strong> ${record.observacaoBruno || record.observacoes || "—"}</p>
+            <p><strong>Letícia:</strong> ${record.observacaoLeticia || "—"}</p>
+          </td>
           <td class="px-4 py-2 space-y-1">
             <button onclick='editRecord(${JSON.stringify(record)})' class="text-blue-600 hover:underline block">Editar</button>
             <button onclick="deleteRecord('${record.id}')" class="text-red-600 hover:underline block">Excluir</button>
@@ -104,7 +107,8 @@
       document.getElementById("midiasIncluidas").value = record.midiasIncluidas || "";
       document.getElementById("link").value = record.link || "";
       document.getElementById("email").value = record.email || "";
-      document.getElementById("observacoes").value = record.observacoes || "";
+      document.getElementById("observacaoBruno").value = record.observacaoBruno || record.observacoes || "";
+      document.getElementById("observacaoLeticia").value = record.observacaoLeticia || "";
       editingId = record.id;
     }
 
@@ -119,7 +123,8 @@
         midiasIncluidas: document.getElementById("midiasIncluidas").value,
         link: document.getElementById("link").value,
         email: document.getElementById("email").value,
-        observacoes: document.getElementById("observacoes").value,
+        observacaoBruno: document.getElementById("observacaoBruno").value,
+        observacaoLeticia: document.getElementById("observacaoLeticia").value,
         status: "Em análise",
         timestamp: serverTimestamp()
       };
@@ -184,7 +189,8 @@
         <input id="midiasIncluidas" placeholder="Mídias Incluídas" class="w-full border p-2">
         <input id="link" placeholder="Link" class="w-full border p-2">
         <input id="email" placeholder="E-mail" class="w-full border p-2">
-        <textarea id="observacoes" placeholder="Observações" class="w-full border p-2"></textarea>
+        <textarea id="observacaoBruno" placeholder="Observação Bruno" class="w-full border p-2"></textarea>
+        <textarea id="observacaoLeticia" placeholder="Observação Letícia" class="w-full border p-2"></textarea>
       </div>
       <div class="mt-4 text-right">
         <button type="submit" class="px-4 py-2 text-white rounded" style="background: var(--tijuca-green);">Salvar</button>
