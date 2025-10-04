@@ -81,8 +81,8 @@
           <td class="px-4 py-2">${record.link ? `<a href="${record.link}" target="_blank" class="text-blue-600 hover:underline">Link</a>` : "—"}</td>
           <td class="px-4 py-2">${record.email || ""}</td>
           <td class="px-4 py-2 text-sm text-gray-600 leading-snug whitespace-pre-line">
-            <p><strong>Bruno:</strong> ${record.observacaoBruno || record.observacoes || "—"}</p>
-            <p><strong>Letícia:</strong> ${record.observacaoLeticia || "—"}</p>
+            <div><strong>Bruno:</strong> ${record.observacaoBruno || "—"}</div>
+            <div><strong>Letícia:</strong> ${record.observacaoLeticia || "—"}</div>
           </td>
           <td class="px-4 py-2 space-y-1">
             <button onclick='editRecord(${JSON.stringify(record)})' class="text-blue-600 hover:underline block">Editar</button>
@@ -107,7 +107,7 @@
       document.getElementById("midiasIncluidas").value = record.midiasIncluidas || "";
       document.getElementById("link").value = record.link || "";
       document.getElementById("email").value = record.email || "";
-      document.getElementById("observacaoBruno").value = record.observacaoBruno || record.observacoes || "";
+      document.getElementById("observacaoBruno").value = record.observacaoBruno || "";
       document.getElementById("observacaoLeticia").value = record.observacaoLeticia || "";
       editingId = record.id;
     }
