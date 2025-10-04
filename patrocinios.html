@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerenciamento de Patrocínios - Tijuca</title>
+  <title>Patrocínios - Tijuca</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
     :root {
       --tijuca-yellow: #f5a800;
@@ -54,44 +55,44 @@
       tbody.innerHTML = "";
 
       records.forEach(record => {
-        const statusClass =
-          record.status === "Aprovado" ? "bg-[var(--tijuca-green)] text-white" :
-          record.status === "Negado" ? "bg-[var(--tijuca-red)] text-white" :
-          "bg-[var(--tijuca-yellow)] text-black";
-
         const row = document.createElement("tr");
         row.className = "border-b hover:bg-gray-50 align-top";
+
+        // Badge de status
+        let statusBadge = "";
+        if (record.status) {
+          let colorClass =
+            record.status === "Aprovado"
+              ? "bg-[var(--tijuca-green)] text-white"
+              : record.status === "Negado"
+              ? "bg-[var(--tijuca-red)] text-white"
+              : "bg-[var(--tijuca-yellow)] text-black";
+          statusBadge = `<span class="px-2 py-1 text-xs font-semibold rounded ${colorClass}">${record.status}</span>`;
+        }
+
         row.innerHTML = `
           <td class="px-4 py-2">${record.data || ""}</td>
           <td class="px-4 py-2">${record.responsavel || ""}</td>
           <td class="px-4 py-2">${record.entidade || ""}</td>
           <td class="px-4 py-2">${record.cota || ""}</td>
           <td class="px-4 py-2">R$ ${(record.valor || 0).toFixed(2)}</td>
-          <td class="px-4 py-2"><span class="px-3 py-1 rounded text-xs font-semibold ${statusClass}">${record.status || "Em análise"}</span></td>
-          <td class="px-4 py-2">${record.midias || "—"}</td>
-          <td class="px-4 py-2 text-sm text-gray-600 leading-snug max-w-xs whitespace-pre-line">${record.obsBruno || "—"}</td>
+          <td class="px-4 py-2">${statusBadge}</td>
+          <td class="px-4 py-2">${record.midiasIncluidas || ""}</td>
           <td class="px-4 py-2">${record.link ? `<a href="${record.link}" target="_blank" class="text-blue-600 hover:underline">Link</a>` : "—"}</td>
-          <td class="px-4 py-2 text-sm text-gray-600 leading-snug max-w-xs whitespace-pre-line">${record.obsLeticia || "—"}</td>
-          <td class="px-4 py-2">
-            <div class="flex flex-col gap-2">
-              <div>
-                <button onclick='editRecord(${JSON.stringify(record)})' class="text-blue-600 hover:underline mr-2">Editar</button>
-                <button onclick="deleteRecord('${record.id}')" class="text-red-600 hover:underline">Excluir</button>
-              </div>
-              <div class="flex flex-wrap gap-2 mt-1 text-xs">
-                <button onclick="updateStatus('${record.id}', 'Em análise')" class="px-2 py-1 bg-[var(--tijuca-yellow)] text-black rounded">Em análise</button>
-                <button onclick="updateStatus('${record.id}', 'Aprovado')" class="px-2 py-1 bg-[var(--tijuca-green)] text-white rounded">Aprovado</button>
-                <button onclick="updateStatus('${record.id}', 'Negado')" class="px-2 py-1 bg-[var(--tijuca-red)] text-white rounded">Negado</button>
-              </div>
+          <td class="px-4 py-2">${record.email || ""}</td>
+          <td class="px-4 py-2 text-sm text-gray-600 leading-snug whitespace-pre-line">${record.observacoes || "—"}</td>
+          <td class="px-4 py-2 space-y-1">
+            <button onclick='editRecord(${JSON.stringify(record)})' class="text-blue-600 hover:underline block">Editar</button>
+            <button onclick="deleteRecord('${record.id}')" class="text-red-600 hover:underline block">Excluir</button>
+            <div class="flex space-x-1 mt-1">
+              <button onclick="updateStatus('${record.id}', 'Em análise')" class="bg-[var(--tijuca-yellow)] text-black px-2 py-1 text-xs rounded">↺</button>
+              <button onclick="updateStatus('${record.id}', 'Aprovado')" class="bg-[var(--tijuca-green)] text-white px-2 py-1 text-xs rounded">✓</button>
+              <button onclick="updateStatus('${record.id}', 'Negado')" class="bg-[var(--tijuca-red)] text-white px-2 py-1 text-xs rounded">✕</button>
             </div>
           </td>
         `;
         tbody.appendChild(row);
       });
-    }
-
-    async function updateStatus(id, novoStatus) {
-      await setDoc(doc(db, getCollectionPath(), id), { status: novoStatus }, { merge: true });
     }
 
     function editRecord(record) {
@@ -100,10 +101,10 @@
       document.getElementById("entidade").value = record.entidade || "";
       document.getElementById("cota").value = record.cota || "";
       document.getElementById("valor").value = record.valor || "";
-      document.getElementById("midias").value = record.midias || "";
-      document.getElementById("obsBruno").value = record.obsBruno || "";
+      document.getElementById("midiasIncluidas").value = record.midiasIncluidas || "";
       document.getElementById("link").value = record.link || "";
-      document.getElementById("obsLeticia").value = record.obsLeticia || "";
+      document.getElementById("email").value = record.email || "";
+      document.getElementById("observacoes").value = record.observacoes || "";
       editingId = record.id;
     }
 
@@ -115,26 +116,47 @@
         entidade: document.getElementById("entidade").value,
         cota: document.getElementById("cota").value,
         valor: parseFloat(document.getElementById("valor").value) || 0,
-        status: "Em análise",
-        midias: document.getElementById("midias").value,
-        obsBruno: document.getElementById("obsBruno").value,
+        midiasIncluidas: document.getElementById("midiasIncluidas").value,
         link: document.getElementById("link").value,
-        obsLeticia: document.getElementById("obsLeticia").value,
+        email: document.getElementById("email").value,
+        observacoes: document.getElementById("observacoes").value,
+        status: "Em análise",
         timestamp: serverTimestamp()
       };
 
-      if (editingId) {
-        await setDoc(doc(db, getCollectionPath(), editingId), dataObj, { merge: true });
-        editingId = null;
-      } else {
-        const docRef = doc(collection(db, getCollectionPath()));
-        await setDoc(docRef, dataObj);
+      try {
+        if (editingId) {
+          await setDoc(doc(db, getCollectionPath(), editingId), dataObj, { merge: true });
+          editingId = null;
+          showToast("Registro atualizado com sucesso!", "info");
+        } else {
+          const docRef = doc(collection(db, getCollectionPath()));
+          await setDoc(docRef, dataObj);
+          showToast("Registro salvo com sucesso!", "success");
+        }
+        document.getElementById("record-form").reset();
+      } catch (e) {
+        console.error(e);
+        showToast("Erro ao salvar!", "error");
       }
-      document.getElementById("record-form").reset();
+    }
+
+    async function updateStatus(id, status) {
+      try {
+        await setDoc(doc(db, getCollectionPath(), id), { status }, { merge: true });
+        showToast(`Status atualizado para ${status}!`, "info");
+      } catch (e) {
+        showToast("Erro ao atualizar status!", "error");
+      }
     }
 
     async function deleteRecord(id) {
-      await deleteDoc(doc(db, getCollectionPath(), id));
+      try {
+        await deleteDoc(doc(db, getCollectionPath(), id));
+        showToast("Registro excluído!", "error");
+      } catch (e) {
+        showToast("Erro ao excluir!", "error");
+      }
     }
 
     window.onload = initializeFirebase;
@@ -144,24 +166,25 @@
     window.updateStatus = updateStatus;
   </script>
 </head>
+
 <body class="p-6 bg-gray-100">
   <div class="w-full px-6">
     <header class="text-center mb-8 bg-white rounded-xl shadow p-6 border-b-4" style="border-color: var(--tijuca-green);">
       <img src="https://i.postimg.cc/bvySmsHG/Prancheta-1-4x.png" class="mx-auto h-16 mb-4">
-      <h1 class="text-2xl font-bold" style="color: var(--tijuca-blue);">Gerenciamento de Patrocínios</h1>
+      <h1 class="text-2xl font-bold" style="color: var(--tijuca-blue);">Gestão de Patrocínios</h1>
     </header>
 
     <form id="record-form" onsubmit="saveRecord(event)" class="bg-white p-6 rounded-xl shadow mb-6">
       <div class="grid md:grid-cols-2 gap-4">
-        <input type="date" id="data" placeholder="Data" class="w-full border p-2">
+        <input type="date" id="data" class="w-full border p-2">
         <input id="responsavel" placeholder="Responsável" class="w-full border p-2">
         <input id="entidade" placeholder="Entidade/Evento" class="w-full border p-2">
         <input id="cota" placeholder="Cota" class="w-full border p-2">
-        <input type="number" step="0.01" id="valor" placeholder="Valor R$" class="w-full border p-2">
-        <input id="midias" placeholder="Mídias Incluídas" class="w-full border p-2">
-        <textarea id="obsBruno" placeholder="Obs. Bruno" class="w-full border p-2"></textarea>
-        <input id="link" placeholder="Link/E-mail" class="w-full border p-2">
-        <textarea id="obsLeticia" placeholder="Obs. Letícia" class="w-full border p-2"></textarea>
+        <input type="number" step="0.01" id="valor" placeholder="Valor (R$)" class="w-full border p-2">
+        <input id="midiasIncluidas" placeholder="Mídias Incluídas" class="w-full border p-2">
+        <input id="link" placeholder="Link" class="w-full border p-2">
+        <input id="email" placeholder="E-mail" class="w-full border p-2">
+        <textarea id="observacoes" placeholder="Observações" class="w-full border p-2"></textarea>
       </div>
       <div class="mt-4 text-right">
         <button type="submit" class="px-4 py-2 text-white rounded" style="background: var(--tijuca-green);">Salvar</button>
@@ -174,14 +197,14 @@
           <tr>
             <th class="px-4 py-2">Data</th>
             <th class="px-4 py-2">Responsável</th>
-            <th class="px-4 py-2">Entidade</th>
+            <th class="px-4 py-2">Entidade/Evento</th>
             <th class="px-4 py-2">Cota</th>
             <th class="px-4 py-2">Valor</th>
             <th class="px-4 py-2">Status</th>
-            <th class="px-4 py-2">Mídias</th>
-            <th class="px-4 py-2">Obs. Bruno</th>
+            <th class="px-4 py-2">Mídias Incluídas</th>
             <th class="px-4 py-2">Link</th>
-            <th class="px-4 py-2">Obs. Letícia</th>
+            <th class="px-4 py-2">E-mail</th>
+            <th class="px-4 py-2">Observações</th>
             <th class="px-4 py-2">Ações</th>
           </tr>
         </thead>
@@ -189,5 +212,30 @@
       </table>
     </div>
   </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 hidden px-4 py-3 rounded-lg shadow-lg text-white text-sm font-semibold z-50 transition-all duration-500">
+    <span id="toast-message"></span>
+  </div>
+
+  <script>
+    function showToast(message, type = "success") {
+      const toast = document.getElementById("toast");
+      const msg = document.getElementById("toast-message");
+      const colors = {
+        success: "bg-[var(--tijuca-green)]",
+        error: "bg-[var(--tijuca-red)]",
+        info: "bg-[var(--tijuca-blue)]",
+      };
+      toast.className = "fixed bottom-6 right-6 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-semibold z-50 transition-all duration-500 " + colors[type];
+      msg.textContent = message;
+      toast.classList.remove("hidden", "opacity-0");
+      toast.classList.add("opacity-100");
+      setTimeout(() => {
+        toast.classList.add("opacity-0");
+        setTimeout(() => toast.classList.add("hidden"), 500);
+      }, 2500);
+    }
+  </script>
 </body>
 </html>
