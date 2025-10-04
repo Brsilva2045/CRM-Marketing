@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel Marketing - Tijuca</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/recharts/umd/Recharts.min.js"></script>
 
   <style>
     :root {
@@ -13,38 +16,12 @@
       --tijuca-green: #00662f;
       --tijuca-red: #cc0000;
     }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body.dark {
-      background-color: #0f172a;
-      color: #f1f5f9;
-    }
-
-    body.dark .card {
-      background-color: #1e293b;
-      border-color: #334155;
-    }
-
-    body.dark nav {
-      background-color: #1e293b;
-    }
-
-    body.dark a {
-      color: #f5a800;
-    }
-
-    .transition-all {
-      transition: all 0.3s ease;
-    }
   </style>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, query, orderBy, limit, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDKNqGVrjbj8l7S7OIvN-w3CKmsj8twC98",
@@ -56,159 +33,289 @@
       measurementId: "G-LX1Z71R97G",
     };
 
-    let db, auth;
+    let db;
 
     async function initializeFirebase() {
       const app = initializeApp(firebaseConfig);
       db = getFirestore(app);
-      auth = getAuth(app);
+      const auth = getAuth(app);
       await signInAnonymously(auth);
       onAuthStateChanged(auth, (user) => {
-        if (user) {
-          loadResumo("doacoes_v2", "doacoes-resumo", "doacoes-total");
-          loadResumo("patrocinios_v2", "patrocinios-resumo", "patrocinios-total");
-          loadResumo("midia_v2", "midia-resumo", "midia-total");
-          loadResumo("midia_ooh_v2", "midia-ooh-resumo", "midia-ooh-total");
-        }
+        if (user) updateDashboard();
       });
     }
 
-    async function loadResumo(collectionName, elementId, counterId) {
-      const snapshotTotal = await getDocs(collection(db, collectionName));
-      document.getElementById(counterId).innerText = snapshotTotal.size;
+    async function updateDashboard() {
+      const totals = {
+        doacoes: (await getDocs(collection(db, "doacoes_v2"))).size,
+        patrocinios: (await getDocs(collection(db, "patrocinios_v2"))).size,
+        midia: (await getDocs(collection(db, "midia_v2"))).size,
+        midia_ooh: (await getDocs(collection(db, "midia_ooh_v2"))).size,
+      };
 
+      document.getElementById("doacoes-count").innerText = totals.doacoes;
+      document.getElementById("patrocinios-count").innerText = totals.patrocinios;
+      document.getElementById("midia-count").innerText = totals.midia;
+      document.getElementById("midia-ooh-count").innerText = totals.midia_ooh;
+
+      await loadLatest("doacoes_v2", "doacoes-list", "projeto", "responsavel");
+      await loadLatest("patrocinios_v2", "patrocinios-list", "entidade", "responsavel");
+      await loadLatest("midia_v2", "midia-list", "campanha", "responsavel");
+      await loadLatest("midia_ooh_v2", "midia-ooh-list", "local", "responsavel");
+
+      renderCharts("12");
+    }
+
+    async function loadLatest(collectionName, containerId, detailField, responsavelField) {
       const q = query(collection(db, collectionName), orderBy("timestamp", "desc"), limit(3));
-      onSnapshot(q, (snapshot) => {
-        const container = document.getElementById(elementId);
-        container.innerHTML = "";
+      const snapshot = await getDocs(q);
 
-        if (snapshot.empty) {
-          container.innerHTML = "<p class='text-gray-500 text-sm'>Sem registros ainda.</p>";
-          return;
+      const container = document.getElementById(containerId);
+      container.innerHTML = "";
+
+      if (snapshot.empty) {
+        container.innerHTML = `<p class="text-gray-500">Sem registros ainda.</p>`;
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const responsavel = data[responsavelField] || "N/A";
+        const detalhe = data[detailField] || "";
+        const dataSolicitacao = data.dataSolicitacao || data.data || "";
+        const status = data.status || "";
+
+        let badge = "";
+        if (status) {
+          let colorClass =
+            status === "Aprovado"
+              ? "bg-[var(--tijuca-green)] text-white"
+              : status === "Negado"
+              ? "bg-[var(--tijuca-red)] text-white"
+              : "bg-[var(--tijuca-yellow)] text-black";
+          badge = `<span class="ml-2 px-2 py-1 text-xs font-semibold rounded ${colorClass}">${status}</span>`;
         }
 
-        snapshot.docs.forEach((doc) => {
-          const data = doc.data();
-
-          let statusBadge = "";
-          if (data.status) {
-            let colorClass =
-              data.status === "Aprovado"
-                ? "bg-[var(--tijuca-green)] text-white"
-                : data.status === "Negado"
-                ? "bg-[var(--tijuca-red)] text-white"
-                : "bg-[var(--tijuca-yellow)] text-black";
-            statusBadge = `<span class="px-2 py-1 text-xs font-semibold rounded ${colorClass}">${data.status}</span>`;
-          }
-
-          const item = document.createElement("div");
-          item.className = "border-b border-gray-300 dark:border-gray-600 py-2 text-sm flex justify-between items-center";
-          item.innerHTML = `
-            <div class="pr-4">
-              <p><span class="font-semibold">${data.responsavel || "N/A"}</span> - ${data.data || ""}</p>
-              <p class="text-gray-600 dark:text-gray-400 truncate">${data.projeto || data.entidade || data.campanha || data.fornecedor || "—"}</p>
+        container.innerHTML += `
+          <div class="flex items-center justify-between border-b py-2">
+            <div>
+              <p class="font-semibold text-[var(--tijuca-blue)]">${responsavel} <span class="text-sm text-gray-500">- ${dataSolicitacao}</span></p>
+              <p class="text-sm text-gray-600">${detalhe}</p>
             </div>
-            <div>${statusBadge}</div>
-          `;
-          container.appendChild(item);
-        });
+            ${badge}
+          </div>
+        `;
       });
     }
 
-    // Toggle dark/light theme
-    function toggleTheme() {
-      const body = document.body;
-      body.classList.toggle("dark");
-      localStorage.setItem("theme", body.classList.contains("dark") ? "dark" : "light");
+    /* -------- GRÁFICOS COM FILTRO -------- */
+    async function renderCharts(period = "12") {
+      const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } = window.Recharts;
+      const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+      const collections = ["doacoes_v2", "patrocinios_v2", "midia_v2", "midia_ooh_v2"];
+
+      const now = new Date();
+      const currentYear = now.getFullYear();
+
+      const monthly = {};
+      for (let i = 0; i < 12; i++) monthly[i] = { doacoes: 0, patrocinios: 0, midia: 0, midia_ooh: 0 };
+      const totals = { doacoes: 0, patrocinios: 0, midia: 0, midia_ooh: 0 };
+
+      for (const col of collections) {
+        const snapshot = await getDocs(collection(db, col));
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const ts = data.timestamp?.toDate?.() || new Date();
+          const month = ts.getMonth();
+          const year = ts.getFullYear();
+
+          let include = false;
+          if (period === "ano" && year === currentYear) include = true;
+          if (period === "3") {
+            const diff = (now.getMonth() - month + 12) % 12;
+            include = year === currentYear && diff < 3;
+          }
+          if (period === "12") include = true;
+
+          if (include) {
+            if (col === "doacoes_v2") { monthly[month].doacoes++; totals.doacoes++; }
+            if (col === "patrocinios_v2") { monthly[month].patrocinios++; totals.patrocinios++; }
+            if (col === "midia_v2") { monthly[month].midia++; totals.midia++; }
+            if (col === "midia_ooh_v2") { monthly[month].midia_ooh++; totals.midia_ooh++; }
+          }
+        });
+      }
+
+      const chartData = months.map((m, i) => ({
+        name: m,
+        doacoes: monthly[i].doacoes,
+        patrocinios: monthly[i].patrocinios,
+        midia: monthly[i].midia,
+        midia_ooh: monthly[i].midia_ooh,
+      }));
+
+      // Gráfico de Barras
+      const BarChartComp = () => React.createElement(
+        ResponsiveContainer, { width: "100%", height: 250 },
+        React.createElement(BarChart, { data: [
+          { name: "Doações", total: totals.doacoes },
+          { name: "Patrocínios", total: totals.patrocinios },
+          { name: "Mídias", total: totals.midia },
+          { name: "Mídia OOH", total: totals.midia_ooh },
+        ] },
+          React.createElement(CartesianGrid, { strokeDasharray: "3 3" }),
+          React.createElement(XAxis, { dataKey: "name" }),
+          React.createElement(YAxis, null),
+          React.createElement(Tooltip, null),
+          React.createElement(Bar, { dataKey: "total", fill: "var(--tijuca-green)" })
+        )
+      );
+
+      // Gráfico de Linhas
+      const LineChartComp = () => React.createElement(
+        ResponsiveContainer, { width: "100%", height: 280 },
+        React.createElement(LineChart, { data: chartData },
+          React.createElement(CartesianGrid, { strokeDasharray: "3 3" }),
+          React.createElement(XAxis, { dataKey: "name" }),
+          React.createElement(YAxis, null),
+          React.createElement(Tooltip, null),
+          React.createElement(Legend, null),
+          React.createElement(Line, { type: "monotone", dataKey: "doacoes", stroke: "var(--tijuca-green)", strokeWidth: 2 }),
+          React.createElement(Line, { type: "monotone", dataKey: "patrocinios", stroke: "var(--tijuca-yellow)", strokeWidth: 2 }),
+          React.createElement(Line, { type: "monotone", dataKey: "midia", stroke: "var(--tijuca-blue)", strokeWidth: 2 }),
+          React.createElement(Line, { type: "monotone", dataKey: "midia_ooh", stroke: "var(--tijuca-red)", strokeWidth: 2 })
+        )
+      );
+
+      ReactDOM.render(React.createElement(BarChartComp), document.getElementById("chart-container"));
+      ReactDOM.render(React.createElement(LineChartComp), document.getElementById("chart-monthly"));
     }
 
-    // Load saved theme
-    window.onload = () => {
-      if (localStorage.getItem("theme") === "dark") document.body.classList.add("dark");
-      initializeFirebase();
-    };
+    document.addEventListener("change", (e) => {
+      if (e.target.id === "chart-filter") {
+        renderCharts(e.target.value);
+      }
+    });
+
+    window.onload = initializeFirebase;
   </script>
 </head>
 
-<body class="bg-gray-100 transition-all">
+<body class="bg-gray-100 p-6">
   <!-- Navbar -->
-  <nav class="fixed top-0 left-0 w-full shadow-md z-50 transition-all">
-    <div class="max-w-7xl mx-auto px-6 flex justify-between items-center h-16">
-      <div class="flex items-center space-x-3">
-        <img src="https://i.postimg.cc/bvySmsHG/Prancheta-1-4x.png" class="h-10" />
-        <span class="text-lg font-bold text-[var(--tijuca-blue)] dark:text-[var(--tijuca-yellow)]">Tijuca Marketing</span>
+  <nav class="bg-gray-100 shadow-md fixed top-0 left-0 w-full z-50">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex justify-between items-center h-14">
+        
+        <!-- Logo + Nome -->
+        <div class="flex items-center space-x-2">
+          <img src="https://i.postimg.cc/bvySmsHG/Prancheta-1-4x.png" alt="Tijuca Logo" class="h-8">
+          <span class="font-bold text-[var(--tijuca-blue)] text-lg">Tijuca Marketing</span>
+        </div>
+
+        <!-- Links -->
+        <div class="hidden md:flex space-x-6">
+          <a href="doacoes.html" class="text-[var(--tijuca-green)] font-medium hover:underline">Doações</a>
+          <a href="patrocinios.html" class="text-[var(--tijuca-green)] font-medium hover:underline">Patrocínios</a>
+          <a href="midia.html" class="text-[var(--tijuca-green)] font-medium hover:underline">Mídias</a>
+          <a href="midia_ooh.html" class="text-[var(--tijuca-green)] font-medium hover:underline">Mídia OOH</a>
+        </div>
+
+        <!-- Botão Dark Mode -->
+        <button id="dark-toggle" class="bg-[var(--tijuca-green)] text-white px-3 py-1 rounded flex items-center gap-1 text-sm">
+          🌞 / 🌙
+        </button>
       </div>
-      <div class="flex space-x-6 text-[var(--tijuca-green)] font-semibold">
-        <a href="doacoes.html" class="hover:underline">Doações</a>
-        <a href="patrocinios.html" class="hover:underline">Patrocínios</a>
-        <a href="midia.html" class="hover:underline">Mídias</a>
-        <a href="midia_ooh.html" class="hover:underline">Mídia OOH</a>
-      </div>
-      <button onclick="toggleTheme()" class="bg-[var(--tijuca-green)] hover:bg-[var(--tijuca-blue)] text-white px-3 py-1 rounded-lg text-sm transition-all">
-        🌞 / 🌙
-      </button>
     </div>
   </nav>
+  <div class="h-16"></div> <!-- compensar navbar fixa -->
 
-  <!-- Conteúdo principal -->
-  <div class="w-full px-6 pt-24 pb-12">
-    <header class="text-center mb-8 bg-gradient-to-r from-[var(--tijuca-green)] to-[var(--tijuca-blue)] text-white rounded-2xl shadow-lg p-6">
-      <h1 class="text-3xl font-extrabold tracking-wide">Painel de Marketing - Tijuca</h1>
-    </header>
-
-    <div class="grid md:grid-cols-2 gap-6">
-      <!-- Doações -->
-      <div class="card bg-white rounded-2xl shadow-lg hover:shadow-xl p-4 border transition-all">
-        <div class="flex justify-between items-center mb-2">
-          <h2 class="text-xl font-bold flex items-center gap-2 uppercase tracking-wide border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
-            <img src="https://i.postimg.cc/d19whLDh/Ativo-1.png" class="h-7 w-7" />
-            Doações
-          </h2>
-          <span id="doacoes-total" class="text-lg font-semibold text-[var(--tijuca-blue)] dark:text-[var(--tijuca-yellow)]">0</span>
-        </div>
-        <div id="doacoes-resumo" class="mb-2"></div>
-        <a href="doacoes.html" class="text-blue-600 dark:text-[var(--tijuca-yellow)] hover:underline text-sm">Ver todas →</a>
-      </div>
-
-      <!-- Patrocínios -->
-      <div class="card bg-white rounded-2xl shadow-lg hover:shadow-xl p-4 border transition-all">
-        <div class="flex justify-between items-center mb-2">
-          <h2 class="text-xl font-bold flex items-center gap-2 uppercase tracking-wide border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
-            <img src="https://i.postimg.cc/bN4rcStQ/Patrocinio.png" class="h-7 w-7" />
-            Patrocínios
-          </h2>
-          <span id="patrocinios-total" class="text-lg font-semibold text-[var(--tijuca-blue)] dark:text-[var(--tijuca-yellow)]">0</span>
-        </div>
-        <div id="patrocinios-resumo" class="mb-2"></div>
-        <a href="patrocinios.html" class="text-blue-600 dark:text-[var(--tijuca-yellow)] hover:underline text-sm">Ver todos →</a>
-      </div>
-
-      <!-- Mídias -->
-      <div class="card bg-white rounded-2xl shadow-lg hover:shadow-xl p-4 border transition-all">
-        <div class="flex justify-between items-center mb-2">
-          <h2 class="text-xl font-bold flex items-center gap-2 uppercase tracking-wide border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
-            <img src="https://i.postimg.cc/FsYzBV7D/Midias.png" class="h-7 w-7" />
-            Mídias
-          </h2>
-          <span id="midia-total" class="text-lg font-semibold text-[var(--tijuca-blue)] dark:text-[var(--tijuca-yellow)]">0</span>
-        </div>
-        <div id="midia-resumo" class="mb-2"></div>
-        <a href="midia.html" class="text-blue-600 dark:text-[var(--tijuca-yellow)] hover:underline text-sm">Ver todas →</a>
-      </div>
-
-      <!-- Mídia OOH -->
-      <div class="card bg-white rounded-2xl shadow-lg hover:shadow-xl p-4 border transition-all">
-        <div class="flex justify-between items-center mb-2">
-          <h2 class="text-xl font-bold flex items-center gap-2 uppercase tracking-wide border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
-            <img src="https://i.postimg.cc/Gh4t5xHF/Midia-OOH-1.png" class="h-7 w-7" />
-            Mídia OOH
-          </h2>
-          <span id="midia-ooh-total" class="text-lg font-semibold text-[var(--tijuca-blue)] dark:text-[var(--tijuca-yellow)]">0</span>
-        </div>
-        <div id="midia-ooh-resumo" class="mb-2"></div>
-        <a href="midia_ooh.html" class="text-blue-600 dark:text-[var(--tijuca-yellow)] hover:underline text-sm">Ver todas →</a>
-      </div>
+  <!-- Estatísticas rápidas -->
+  <section class="grid md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white rounded-xl shadow p-4 text-center border-b-4" style="border-color: var(--tijuca-green);">
+      <h2 class="text-lg font-semibold text-[var(--tijuca-green)]">Doações</h2>
+      <p id="doacoes-count" class="text-3xl font-bold mt-2 text-[var(--tijuca-blue)]">0</p>
     </div>
-  </div>
+    <div class="bg-white rounded-xl shadow p-4 text-center border-b-4" style="border-color: var(--tijuca-yellow);">
+      <h2 class="text-lg font-semibold text-[var(--tijuca-yellow)]">Patrocínios</h2>
+      <p id="patrocinios-count" class="text-3xl font-bold mt-2 text-[var(--tijuca-blue)]">0</p>
+    </div>
+    <div class="bg-white rounded-xl shadow p-4 text-center border-b-4" style="border-color: var(--tijuca-blue);">
+      <h2 class="text-lg font-semibold text-[var(--tijuca-blue)]">Mídias</h2>
+      <p id="midia-count" class="text-3xl font-bold mt-2 text-[var(--tijuca-blue)]">0</p>
+    </div>
+    <div class="bg-white rounded-xl shadow p-4 text-center border-b-4" style="border-color: var(--tijuca-red);">
+      <h2 class="text-lg font-semibold text-[var(--tijuca-red)]">Mídia OOH</h2>
+      <p id="midia-ooh-count" class="text-3xl font-bold mt-2 text-[var(--tijuca-blue)]">0</p>
+    </div>
+  </section>
+
+  <!-- Seções -->
+  <section class="grid md:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-xl shadow">
+      <h2 class="flex items-center text-xl font-bold text-[var(--tijuca-green)] mb-4">
+        <img src="https://i.postimg.cc/d19whLDh/Ativo-1.png" class="h-6 w-6 mr-2"> DOAÇÕES <span class="ml-auto text-gray-500" id="doacoes-count">0</span>
+      </h2>
+      <div id="doacoes-list"></div>
+      <a href="doacoes.html" class="text-blue-600 hover:underline block mt-2">Ver todas →</a>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow">
+      <h2 class="flex items-center text-xl font-bold text-[var(--tijuca-yellow)] mb-4">
+        <img src="https://i.postimg.cc/bN4rcStQ/Patrocinio.png" class="h-6 w-6 mr-2"> PATROCÍNIOS <span class="ml-auto text-gray-500" id="patrocinios-count">0</span>
+      </h2>
+      <div id="patrocinios-list"></div>
+      <a href="patrocinios.html" class="text-blue-600 hover:underline block mt-2">Ver todas →</a>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow">
+      <h2 class="flex items-center text-xl font-bold text-[var(--tijuca-blue)] mb-4">
+        <img src="https://i.postimg.cc/FsYzBV7D/Midias.png" class="h-6 w-6 mr-2"> MÍDIAS <span class="ml-auto text-gray-500" id="midia-count">0</span>
+      </h2>
+      <div id="midia-list"></div>
+      <a href="midia.html" class="text-blue-600 hover:underline block mt-2">Ver todas →</a>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow">
+      <h2 class="flex items-center text-xl font-bold text-[var(--tijuca-red)] mb-4">
+        <img src="https://i.postimg.cc/Gh4t5xHF/Midia-OOH-1.png" class="h-6 w-6 mr-2"> MÍDIA OOH <span class="ml-auto text-gray-500" id="midia-ooh-count">0</span>
+      </h2>
+      <div id="midia-ooh-list"></div>
+      <a href="midia_ooh.html" class="text-blue-600 hover:underline block mt-2">Ver todas →</a>
+    </div>
+  </section>
+
+  <!-- Gráficos -->
+  <section class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold text-[var(--tijuca-green)]">Resumo de Registros por Tipo</h2>
+      <select id="chart-filter" class="border rounded p-2 text-sm">
+        <option value="3">Últimos 3 meses</option>
+        <option value="ano">Ano atual</option>
+        <option value="12" selected>Últimos 12 meses</option>
+      </select>
+    </div>
+    <div id="chart-container" style="width:100%; height:250px;"></div>
+  </section>
+
+  <section class="bg-white rounded-2xl shadow-lg p-6 mb-10">
+    <h2 class="text-xl font-bold mb-4 text-[var(--tijuca-green)]">Evolução Mensal de Registros</h2>
+    <div id="chart-monthly" style="width:100%; height:280px;"></div>
+  </section>
+
+  <!-- Dark Mode -->
+  <script>
+    const toggleBtn = document.getElementById("dark-toggle");
+    toggleBtn.addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
+      if (document.documentElement.classList.contains("dark")) {
+        document.body.classList.add("bg-gray-900", "text-white");
+        toggleBtn.innerHTML = "🌙";
+      } else {
+        document.body.classList.remove("bg-gray-900", "text-white");
+        toggleBtn.innerHTML = "🌞 / 🌙";
+      }
+    });
+  </script>
 </body>
 </html>
