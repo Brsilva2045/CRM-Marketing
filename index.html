@@ -1,16 +1,43 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Painel Marketing - Tijuca</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
     :root {
       --tijuca-yellow: #f5a800;
       --tijuca-blue: #003a70;
       --tijuca-green: #00662f;
       --tijuca-red: #cc0000;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body.dark {
+      background-color: #0f172a;
+      color: #f1f5f9;
+    }
+
+    body.dark .card {
+      background-color: #1e293b;
+      border-color: #334155;
+    }
+
+    body.dark nav {
+      background-color: #1e293b;
+    }
+
+    body.dark a {
+      color: #f5a800;
+    }
+
+    .transition-all {
+      transition: all 0.3s ease;
     }
   </style>
 
@@ -26,7 +53,7 @@
       storageBucket: "crm-marketing-b7767.appspot.com",
       messagingSenderId: "27887822785",
       appId: "1:27887822785:web:4e4bee6d07cc9007433140",
-      measurementId: "G-LX1Z71R97G"
+      measurementId: "G-LX1Z71R97G",
     };
 
     let db, auth;
@@ -60,24 +87,26 @@
           return;
         }
 
-        snapshot.docs.forEach(doc => {
+        snapshot.docs.forEach((doc) => {
           const data = doc.data();
 
           let statusBadge = "";
           if (data.status) {
             let colorClass =
-              data.status === "Aprovado" ? "bg-[var(--tijuca-green)] text-white" :
-              data.status === "Negado" ? "bg-[var(--tijuca-red)] text-white" :
-              "bg-[var(--tijuca-yellow)] text-black";
+              data.status === "Aprovado"
+                ? "bg-[var(--tijuca-green)] text-white"
+                : data.status === "Negado"
+                ? "bg-[var(--tijuca-red)] text-white"
+                : "bg-[var(--tijuca-yellow)] text-black";
             statusBadge = `<span class="px-2 py-1 text-xs font-semibold rounded ${colorClass}">${data.status}</span>`;
           }
 
           const item = document.createElement("div");
-          item.className = "border-b py-2 text-sm flex justify-between items-center";
+          item.className = "border-b border-gray-300 dark:border-gray-600 py-2 text-sm flex justify-between items-center";
           item.innerHTML = `
             <div class="pr-4">
               <p><span class="font-semibold">${data.responsavel || "N/A"}</span> - ${data.data || ""}</p>
-              <p class="text-gray-600 truncate">${data.projeto || data.entidade || data.campanha || data.fornecedor || "—"}</p>
+              <p class="text-gray-600 dark:text-gray-400 truncate">${data.projeto || data.entidade || data.campanha || data.fornecedor || "—"}</p>
             </div>
             <div>${statusBadge}</div>
           `;
@@ -86,84 +115,98 @@
       });
     }
 
-    window.onload = initializeFirebase;
+    // Toggle dark/light theme
+    function toggleTheme() {
+      const body = document.body;
+      body.classList.toggle("dark");
+      localStorage.setItem("theme", body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    // Load saved theme
+    window.onload = () => {
+      if (localStorage.getItem("theme") === "dark") document.body.classList.add("dark");
+      initializeFirebase();
+    };
   </script>
 </head>
-<body class="bg-gray-100">
 
-  <!-- Navbar fixa -->
-  <nav class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
+<body class="bg-gray-100 transition-all">
+  <!-- Navbar -->
+  <nav class="fixed top-0 left-0 w-full shadow-md z-50 transition-all">
     <div class="max-w-7xl mx-auto px-6 flex justify-between items-center h-16">
       <div class="flex items-center space-x-3">
-        <img src="https://i.postimg.cc/bvySmsHG/Prancheta-1-4x.png" class="h-10">
-        <span class="text-lg font-bold text-[var(--tijuca-blue)]">Tijuca Marketing</span>
+        <img src="https://i.postimg.cc/bvySmsHG/Prancheta-1-4x.png" class="h-10" />
+        <span class="text-lg font-bold text-[var(--tijuca-blue)] dark:text-[var(--tijuca-yellow)]">Tijuca Marketing</span>
       </div>
-      <div class="flex space-x-6">
-        <a href="doacoes.html" class="text-[var(--tijuca-green)] font-semibold hover:underline">Doações</a>
-        <a href="patrocinios.html" class="text-[var(--tijuca-green)] font-semibold hover:underline">Patrocínios</a>
-        <a href="midia.html" class="text-[var(--tijuca-green)] font-semibold hover:underline">Mídias</a>
-        <a href="midia_ooh.html" class="text-[var(--tijuca-green)] font-semibold hover:underline">Mídia OOH</a>
+      <div class="flex space-x-6 text-[var(--tijuca-green)] font-semibold">
+        <a href="doacoes.html" class="hover:underline">Doações</a>
+        <a href="patrocinios.html" class="hover:underline">Patrocínios</a>
+        <a href="midia.html" class="hover:underline">Mídias</a>
+        <a href="midia_ooh.html" class="hover:underline">Mídia OOH</a>
       </div>
+      <button onclick="toggleTheme()" class="bg-[var(--tijuca-green)] hover:bg-[var(--tijuca-blue)] text-white px-3 py-1 rounded-lg text-sm transition-all">
+        🌞 / 🌙
+      </button>
     </div>
   </nav>
 
   <!-- Conteúdo principal -->
-  <div class="w-full px-6 pt-24">
-    <header class="text-center mb-8 bg-white rounded-xl shadow p-6 border-b-4" style="border-color: var(--tijuca-green);">
-      <h1 class="text-3xl font-extrabold tracking-wide" style="color: var(--tijuca-blue);">Painel de Marketing - Tijuca</h1>
+  <div class="w-full px-6 pt-24 pb-12">
+    <header class="text-center mb-8 bg-gradient-to-r from-[var(--tijuca-green)] to-[var(--tijuca-blue)] text-white rounded-2xl shadow-lg p-6">
+      <h1 class="text-3xl font-extrabold tracking-wide">Painel de Marketing - Tijuca</h1>
     </header>
 
     <div class="grid md:grid-cols-2 gap-6">
       <!-- Doações -->
-      <div class="bg-white rounded-xl shadow p-4">
+      <div class="card bg-white rounded-2xl shadow-lg hover:shadow-xl p-4 border transition-all">
         <div class="flex justify-between items-center mb-2">
-          <h2 class="text-xl font-bold flex items-center gap-2 border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
-            <img src="https://i.postimg.cc/d19whLDh/Ativo-1.png" class="h-6 w-6">
+          <h2 class="text-xl font-bold flex items-center gap-2 uppercase tracking-wide border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
+            <img src="https://i.postimg.cc/d19whLDh/Ativo-1.png" class="h-7 w-7" />
             Doações
           </h2>
-          <span id="doacoes-total" class="text-lg font-semibold text-[var(--tijuca-blue)]">0</span>
+          <span id="doacoes-total" class="text-lg font-semibold text-[var(--tijuca-blue)] dark:text-[var(--tijuca-yellow)]">0</span>
         </div>
         <div id="doacoes-resumo" class="mb-2"></div>
-        <a href="doacoes.html" class="text-blue-600 hover:underline text-sm">Ver todas →</a>
+        <a href="doacoes.html" class="text-blue-600 dark:text-[var(--tijuca-yellow)] hover:underline text-sm">Ver todas →</a>
       </div>
 
       <!-- Patrocínios -->
-      <div class="bg-white rounded-xl shadow p-4">
+      <div class="card bg-white rounded-2xl shadow-lg hover:shadow-xl p-4 border transition-all">
         <div class="flex justify-between items-center mb-2">
-          <h2 class="text-xl font-bold flex items-center gap-2 border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
-            <img src="https://i.postimg.cc/bN4rcStQ/Patrocinio.png" class="h-6 w-6">
+          <h2 class="text-xl font-bold flex items-center gap-2 uppercase tracking-wide border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
+            <img src="https://i.postimg.cc/bN4rcStQ/Patrocinio.png" class="h-7 w-7" />
             Patrocínios
           </h2>
-          <span id="patrocinios-total" class="text-lg font-semibold text-[var(--tijuca-blue)]">0</span>
+          <span id="patrocinios-total" class="text-lg font-semibold text-[var(--tijuca-blue)] dark:text-[var(--tijuca-yellow)]">0</span>
         </div>
         <div id="patrocinios-resumo" class="mb-2"></div>
-        <a href="patrocinios.html" class="text-blue-600 hover:underline text-sm">Ver todos →</a>
+        <a href="patrocinios.html" class="text-blue-600 dark:text-[var(--tijuca-yellow)] hover:underline text-sm">Ver todos →</a>
       </div>
 
       <!-- Mídias -->
-      <div class="bg-white rounded-xl shadow p-4">
+      <div class="card bg-white rounded-2xl shadow-lg hover:shadow-xl p-4 border transition-all">
         <div class="flex justify-between items-center mb-2">
-          <h2 class="text-xl font-bold flex items-center gap-2 border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
-            <img src="https://i.postimg.cc/FsYzBV7D/Midias.png" class="h-6 w-6">
+          <h2 class="text-xl font-bold flex items-center gap-2 uppercase tracking-wide border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
+            <img src="https://i.postimg.cc/FsYzBV7D/Midias.png" class="h-7 w-7" />
             Mídias
           </h2>
-          <span id="midia-total" class="text-lg font-semibold text-[var(--tijuca-blue)]">0</span>
+          <span id="midia-total" class="text-lg font-semibold text-[var(--tijuca-blue)] dark:text-[var(--tijuca-yellow)]">0</span>
         </div>
         <div id="midia-resumo" class="mb-2"></div>
-        <a href="midia.html" class="text-blue-600 hover:underline text-sm">Ver todas →</a>
+        <a href="midia.html" class="text-blue-600 dark:text-[var(--tijuca-yellow)] hover:underline text-sm">Ver todas →</a>
       </div>
 
       <!-- Mídia OOH -->
-      <div class="bg-white rounded-xl shadow p-4">
+      <div class="card bg-white rounded-2xl shadow-lg hover:shadow-xl p-4 border transition-all">
         <div class="flex justify-between items-center mb-2">
-          <h2 class="text-xl font-bold flex items-center gap-2 border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
-            <img src="https://i.postimg.cc/Gh4t5xHF/Midia-OOH-1.png" class="h-6 w-6">
+          <h2 class="text-xl font-bold flex items-center gap-2 uppercase tracking-wide border-b-2 pb-1" style="border-color: var(--tijuca-green); color: var(--tijuca-green);">
+            <img src="https://i.postimg.cc/Gh4t5xHF/Midia-OOH-1.png" class="h-7 w-7" />
             Mídia OOH
           </h2>
-          <span id="midia-ooh-total" class="text-lg font-semibold text-[var(--tijuca-blue)]">0</span>
+          <span id="midia-ooh-total" class="text-lg font-semibold text-[var(--tijuca-blue)] dark:text-[var(--tijuca-yellow)]">0</span>
         </div>
         <div id="midia-ooh-resumo" class="mb-2"></div>
-        <a href="midia_ooh.html" class="text-blue-600 hover:underline text-sm">Ver todas →</a>
+        <a href="midia_ooh.html" class="text-blue-600 dark:text-[var(--tijuca-yellow)] hover:underline text-sm">Ver todas →</a>
       </div>
     </div>
   </div>
